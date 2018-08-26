@@ -4,7 +4,6 @@ from Tkinter import *
 from decimal import Decimal
 import evdev
 from evdev import InputDevice, categorize, ecodes
-import multiprocessing
 from select import select
 
 class MyFirstGUI:
