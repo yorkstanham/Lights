@@ -2,8 +2,8 @@
 import Tkinter as tk
 from Tkinter import *
 from decimal import Decimal
-import evdev
-from evdev import InputDevice, categorize, ecodes
+#import evdev
+#from evdev import InputDevice, categorize, ecodes
 from select import select
 
 class MyFirstGUI:
@@ -507,15 +507,10 @@ class MyFirstGUI:
 
 root = Tk()
 gui = MyFirstGUI(root)
-'''watchControllerOne = multiprocessing.Process(name="watchControllerOne", target=gui.getGamePadValueOne)
-watchControllerTwo = multiprocessing.Process(name="watchControllerTwo", target=gui.getGamePadValueTwo)
-watchControllerOne.start()
-watchControllerTwo.start()'''
 my_gui = MyFirstGUI(root)
 #root.geometry("500x500")
 root.configure(background='black')
 root.overrideredirect(True)
 root.overrideredirect(False)
-#root.attributes('-fullscreen',True)
-
+root.attributes('-fullscreen',True)
 root.mainloop()
