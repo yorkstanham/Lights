@@ -70,38 +70,9 @@ class MyFirstGUI:
 
         self.button_frame.columnconfigure(0, weight=1)
         self.button_frame.columnconfigure(1, weight=1)
-        self.button_frame.columnconfigure(2, weight=1)
-        self.button_frame.columnconfigure(3, weight=1)
-        self.button_frame.columnconfigure(4, weight=1)
-        self.button_frame.columnconfigure(5, weight=1)
-        self.button_frame.columnconfigure(6, weight=1)
-        self.button_frame.columnconfigure(7, weight=1)
-        self.button_frame.columnconfigure(8, weight=1)
-        self.button_frame.columnconfigure(9, weight=1)
-        self.button_frame.columnconfigure(10, weight=1)
-        self.button_frame.columnconfigure(11, weight=1)
-        self.button_frame.columnconfigure(12, weight=1)
-        self.button_frame.columnconfigure(13, weight=1)
-        self.button_frame.columnconfigure(14, weight=1)
 
-        self.white_one.grid(row=0, column=0, sticky=tk.W + tk.E)
-        self.red_one.grid(row=0, column=1, sticky=tk.W + tk.E)
-        self.blue_one.grid(row=0, column=2, sticky=tk.W + tk.E)
-        self.yellow_one.grid(row=0, column=3, sticky=tk.W + tk.E)
-
-        self.white_two.grid(row=0, column=4, sticky=tk.W + tk.E)
-        self.red_two.grid(row=0, column=5, sticky=tk.W + tk.E)
-        self.blue_two.grid(row=0, column=6, sticky=tk.W + tk.E)
-        self.yellow_two.grid(row=0, column=7, sticky=tk.W + tk.E)
-
-        self.white_three.grid(row=0, column=8, sticky=tk.W + tk.E)
-        self.red_three.grid(row=0, column=9, sticky=tk.W + tk.E)
-        self.blue_three.grid(row=0, column=10, sticky=tk.W + tk.E)
-        self.yellow_three.grid(row=0, column=11, sticky=tk.W + tk.E)
-
-        self.bar_loaded.grid(row=0, column=12, sticky=tk.W + tk.E)
-        self.start_controller_one.grid(row=0, column=13, sticky=tk.W + tk.E)
-        self.start_controller_two.grid(row=0, column=14, sticky=tk.W + tk.E)
+        #self.start_controller_one.grid(row=0, column=0, sticky=tk.W + tk.E)
+        #self.start_controller_two.grid(row=0, column=1, sticky=tk.W + tk.E)
 
         self.w = Canvas(root, width=self.screenWidth, height=self.screenHeight, highlightthickness=0)
         self.w.configure(background="#000000")
@@ -116,7 +87,30 @@ class MyFirstGUI:
         self.startedWatching = False
         self.firstRun = True
         self.devicesFound = False
-        
+
+        #MENU CREATOR
+        self.menu = Menu(self.master)
+        self.master.config(menu=self.menu)
+
+        file = Menu(self.menu)
+        settings = Menu(self.menu)
+        help = Menu(self.menu)
+
+        self.menu.add_cascade(label="File", menu=file)
+        self.menu.add_cascade(label="Settings", menu=settings)
+        self.menu.add_cascade(label="Help", menu=help)
+
+        file.add_command(label="Connect Remotes", command=self.getDevices)
+        file.add_command(label="Start Remotes", command=self.watchRemotes)
+        file.add_command(label="Exit",command=master.quit)
+        settings.add_checkbutton(label="Show Decision Cards",command=self.toggleUseCards)
+        help.add_command(label="View User Guide")
+
+    def toggleUseCards(self):
+        self.useCards = not self.useCards
+        print(self.useCards)
+
+
     def getDevices(self):
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
@@ -126,18 +120,15 @@ class MyFirstGUI:
                 self.devicePaths.append(device.path)
 
         if not self.devicesFound:
-            print(self.devicePaths)
+
             self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))
             self.devices = {dev.fd: dev for dev in self.devices}
             for dev in self.devices.values(): print(dev)
-            #r,w,x = select(self.devices, [], [])
-            print(self.devices.keys())
+
             self.r1 = self.devices.keys()[0]
             self.r2 = self.devices.keys()[1]
             self.r3 = self.devices.keys()[2]
-            print(self.r1)
-            print(self.r2)
-            print(self.r3)
+
             self.identifyRemoteOne()
             self.identifyRemoteTwo()
             self.identifyRemoteThree()
@@ -222,7 +213,7 @@ class MyFirstGUI:
                                 #print("Judge Two Chose Red")
                                 return
                             elif fd == self.r_c3:
-                                self.judgeTwoChosenRed(color3="red")
+                                self.judgeThreeChosenRed(color3="red")
                         elif event.code == self.squareBtn:
                             if fd == self.r_c1 and self.watchForDecisions == True:
                                 self.judgeThreeChosenRed(color3="red")
@@ -526,8 +517,8 @@ class MyFirstGUI:
 root = Tk()
 gui = MyFirstGUI(root)
 my_gui = MyFirstGUI(root)
-#root.geometry("500x500")
 root.configure(background='black')
+#root.geometry("720x450")
 root.overrideredirect(True)
 root.overrideredirect(False)
 root.attributes('-fullscreen',True)
