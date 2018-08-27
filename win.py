@@ -2,8 +2,8 @@
 import Tkinter as tk
 from Tkinter import *
 from decimal import Decimal
-#import evdev
-#from evdev import InputDevice, categorize, ecodes
+import evdev
+from evdev import InputDevice, categorize, ecodes
 from select import select
 
 class MyFirstGUI:
@@ -121,60 +121,76 @@ class MyFirstGUI:
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
         for device in self.deviceList:
-            #print(device.path, device.name, device.phys)
             self.deviceName = (str(device.name))
-            
             if self.deviceName == 'Wireless Controller':
-                #print(self.deviceName)
                 self.devicePaths.append(device.path)
-                #print(self.devicePaths)
-                
+
         if not self.devicesFound:
             print(self.devicePaths)
-            self.devices = map(InputDevice, ('/dev/input/event5', '/dev/input/event8'))
+            self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))
             self.devices = {dev.fd: dev for dev in self.devices}
             for dev in self.devices.values(): print(dev)
-            r,w,x = select(self.devices, [], [])
+            #r,w,x = select(self.devices, [], [])
             print(self.devices.keys())
             self.r1 = self.devices.keys()[0]
             self.r2 = self.devices.keys()[1]
+            self.r3 = self.devices.keys()[2]
             print(self.r1)
             print(self.r2)
-            self.devicesFound = True
+            print(self.r3)
             self.identifyRemoteOne()
             self.identifyRemoteTwo()
+            self.identifyRemoteThree()
+            self.devicesFound = True
             
     def identifyRemoteOne(self):
         while True:
-            self.w.create_text(800, 400, fill="white", width="800", font="helvetica 30", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
+            self.w.create_text(800, 300, fill="white", width="800", font="helvetica 30", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == self.triangleBtn:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
                             self.r_c1 = fd
                             print("r_c1 = " + str(self.r_c1))
                             self.w.delete("RemoteOneInstructions")
-                            self.w.create_text(800, 400, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
+                            self.w.create_text(800, 300, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
                             root.update()
                             return
     
     def identifyRemoteTwo(self):
         while True:
-            #self.w.delete("confirmConnection")
-            self.w.create_text(800, 600, fill="white", width="800", font="helvetica 30", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
+            self.w.create_text(800, 500, fill="white", width="800", font="helvetica 30", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == self.triangleBtn:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 print("r_c2 = " + str(self.r_c2))
                                 self.w.delete("RemoteTwoInstructions")
-                                self.w.create_text(800, 600, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
+                                self.w.create_text(800, 500, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
+                                root.update()
+                                event.code = 25
+                                return
+
+    def identifyRemoteThree(self):
+        while True:
+            self.w.create_text(800, 700, fill="white", width="800", font="helvetica 30", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
+            root.update()
+            r,w,x = select(self.devices, [], [])
+            for fd in r:
+                for event in self.devices[fd].read():
+                    if event.type == ecodes.EV_KEY:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
+                            if fd != self.r_c1 and fd != self.r_c2:
+                                self.r_c3 = fd
+                                print("r_c2 = " + str(self.r_c3))
+                                self.w.delete("RemoteThreeInstructions")
+                                self.w.create_text(800, 700, fill="white", width="800", font="helvetica 30", text="Remote Three Connected", tag="confirmConnection")
                                 root.update()
                                 event.code = 25
                                 return
@@ -186,15 +202,15 @@ class MyFirstGUI:
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
-                    #print(event)
                         if event.code == self.xBtn and self.watchForDecisions == True:
                             if fd == self.r_c1:
                                 self.judgeOneChosenWhite()
-                                #print("Judge One Chose White")
                                 return
                             elif fd == self.r_c2:
                                 self.judgeTwoChosenWhite()
-                                #print("Judge Two Chose White")
+                                return
+                            elif fd == self.r_c3:
+                                self.judgeThreeChosenWhite()
                                 return
                         elif event.code == self.circleBtn and self.watchForDecisions == True:
                             if fd == self.r_c1:
@@ -205,6 +221,8 @@ class MyFirstGUI:
                                 self.judgeTwoChosenRed(color2="red")
                                 #print("Judge Two Chose Red")
                                 return
+                            elif fd == self.r_c3:
+                                self.judgeTwoChosenRed(color3="red")
                         elif event.code == self.squareBtn:
                             if fd == self.r_c1 and self.watchForDecisions == True:
                                 self.judgeThreeChosenRed(color3="red")
