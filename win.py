@@ -65,14 +65,17 @@ class MyFirstGUI:
         self.yellow_three = tk.Button(self.button_frame, text='#3 Yellow', command=lambda: self.judgeThreeChosenRed(color3="yellow"))
 
         self.bar_loaded = tk.Button(self.button_frame, text='Bar Loaded', command=self.initBarLoaded)
-        self.start_controller_one = tk.Button(self.button_frame, text='Connect Remotes', command=self.getDevices)
-        self.start_controller_two = tk.Button(self.button_frame, text='Start', command=self.watchRemotes)
+        self.start_controller_one = tk.Button(self.button_frame, text='Connect Remotes', command=self.getDevices, fg="white", bg="black")
+        self.start_controller_two = tk.Button(self.button_frame, text='Start', command=self.watchRemotes, fg="white", bg="black")
+        self.exit_button = tk.Button(self.button_frame, text='Quit', command=master.quit, fg="white", bg="black")
 
         self.button_frame.columnconfigure(0, weight=1)
         self.button_frame.columnconfigure(1, weight=1)
+        self.button_frame.columnconfigure(2, weight=1)
 
-        #self.start_controller_one.grid(row=0, column=0, sticky=tk.W + tk.E)
-        #self.start_controller_two.grid(row=0, column=1, sticky=tk.W + tk.E)
+        self.start_controller_one.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.start_controller_two.grid(row=0, column=1, sticky=tk.W + tk.E)
+        self.exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
 
         self.w = Canvas(root, width=self.screenWidth, height=self.screenHeight, highlightthickness=0)
         self.w.configure(background="#000000")
@@ -89,7 +92,7 @@ class MyFirstGUI:
         self.devicesFound = False
 
         #MENU CREATOR
-        self.menu = Menu(self.master)
+        '''self.menu = Menu(self.master)
         self.master.config(menu=self.menu)
 
         file = Menu(self.menu)
@@ -104,7 +107,7 @@ class MyFirstGUI:
         file.add_command(label="Start Remotes", command=self.watchRemotes)
         file.add_command(label="Exit",command=master.quit)
         settings.add_checkbutton(label="Show Decision Cards",command=self.toggleUseCards)
-        help.add_command(label="View User Guide")
+        help.add_command(label="View User Guide")'''
 
     def toggleUseCards(self):
         self.useCards = not self.useCards
@@ -114,11 +117,14 @@ class MyFirstGUI:
     def getDevices(self):
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
+        print(self.deviceList)
         for device in self.deviceList:
             self.deviceName = (str(device.name))
-            if self.deviceName == 'Wireless Controller':
+            if self.deviceName == 'Wireless Controller':# or 'Sony Computer Entertainment Wireless Controller':
                 self.devicePaths.append(device.path)
-
+        print "-------------------- DEVICE PATH -------------"
+        print(self.devicePaths)
+        
         if not self.devicesFound:
 
             self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))
@@ -128,6 +134,10 @@ class MyFirstGUI:
             self.r1 = self.devices.keys()[0]
             self.r2 = self.devices.keys()[1]
             self.r3 = self.devices.keys()[2]
+            
+            print(self.r1)
+            print(self.r2)
+            print(self.r3)
 
             self.identifyRemoteOne()
             self.identifyRemoteTwo()
@@ -135,8 +145,9 @@ class MyFirstGUI:
             self.devicesFound = True
             
     def identifyRemoteOne(self):
+        print("Looking for remote one")
         while True:
-            self.w.create_text(800, 300, fill="white", width="800", font="helvetica 30", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
+            self.w.create_text(800, 400, fill="white", width="800", font="helvetica 30", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
@@ -151,14 +162,18 @@ class MyFirstGUI:
                             return
     
     def identifyRemoteTwo(self):
+        print "looking for remote 2"
         while True:
             self.w.create_text(800, 500, fill="white", width="800", font="helvetica 30", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
+            print(r)
             for fd in r:
+                print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
+                            print fd
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 print("r_c2 = " + str(self.r_c2))
@@ -169,14 +184,17 @@ class MyFirstGUI:
                                 return
 
     def identifyRemoteThree(self):
+        print "looking for remote 3"
         while True:
             self.w.create_text(800, 700, fill="white", width="800", font="helvetica 30", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
+                print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
+                            print fd
                             if fd != self.r_c1 and fd != self.r_c2:
                                 self.r_c3 = fd
                                 print("r_c2 = " + str(self.r_c3))
