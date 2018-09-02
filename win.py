@@ -2,8 +2,8 @@
 import Tkinter as tk
 from Tkinter import *
 from decimal import Decimal
-#import evdev
-#from evdev import InputDevice, categorize, ecodes
+import evdev
+from evdev import InputDevice, categorize, ecodes
 from select import select
 
 class MyFirstGUI:
@@ -15,22 +15,34 @@ class MyFirstGUI:
         self.judgeOne = False
         self.judgeTwo = False
         self.judgeThree = False
-        self.time = 60
+        self.startTime = 60
         self.submissionTimerOneValue = 60
-        self.submissionTimerOneValue = 60
+        self.submissionTimerTwoValue = 60
         self.scoresIn = False
         self.startSubmissionTimer = False
-        self.submissionTimerOneRunning = False
-        self.submissionTimerTwoRunning = False
+        self.submissionTimerOneRunning = ""
+        self.submissionTimerTwoRunning = ""
+        self.submissionTimerThreeRunning = ""
+
+        self.timerFont = "helvetica 90"
+
         self.watchForDecisions = True
         self.clock = "ClockRunning"
         self.useCards = False
         self.allResultsIn = False
+        self.timerOnePosition = 0
+        self.timerTwoPosition = 0
         self.screenWidth = Decimal(root.winfo_screenwidth())
         self.screenHeight = Decimal(root.winfo_screenheight())
+        self.submissionOne_x = ""
+        self.submissionOne_y = ""
+        self.submissionTwo_x = ""
+        self.submissionTwo_y = ""
 
         self.x_centre = Decimal(root.winfo_screenwidth())/2
+        self.x_quarter = Decimal(root.winfo_screenwidth())/4
         self.y_centre = Decimal(root.winfo_screenheight())/2
+        self.y_quarter = Decimal(root.winfo_screenheight())/4
         self.small_radius = Decimal(root.winfo_screenwidth())/35
         self.large_radius = Decimal(root.winfo_screenwidth())/8
 
@@ -65,45 +77,20 @@ class MyFirstGUI:
         self.yellow_three = tk.Button(self.button_frame, text='#3 Yellow', command=lambda: self.judgeThreeChosenRed(color3="yellow"))
 
         self.bar_loaded = tk.Button(self.button_frame, text='Bar Loaded', command=self.initBarLoaded)
-        self.start_controller_one = tk.Button(self.button_frame, text='Connect Remotes', command=self.getDevices)
-        self.start_controller_two = tk.Button(self.button_frame, text='Start', command=self.watchRemotes)
+        self.start_controller_one = tk.Button(self.button_frame, text='Connect Remotes', command=self.getDevices, fg="white", bg="black")
+        self.start_controller_two = tk.Button(self.button_frame, text='Start', command=self.watchRemotes, fg="white", bg="black")
+        self.exit_button = tk.Button(self.button_frame, text='Quit', command=root.destroy, fg="white", bg="black")
 
         self.button_frame.columnconfigure(0, weight=1)
         self.button_frame.columnconfigure(1, weight=1)
         self.button_frame.columnconfigure(2, weight=1)
-        self.button_frame.columnconfigure(3, weight=1)
-        self.button_frame.columnconfigure(4, weight=1)
-        self.button_frame.columnconfigure(5, weight=1)
-        self.button_frame.columnconfigure(6, weight=1)
-        self.button_frame.columnconfigure(7, weight=1)
-        self.button_frame.columnconfigure(8, weight=1)
-        self.button_frame.columnconfigure(9, weight=1)
-        self.button_frame.columnconfigure(10, weight=1)
-        self.button_frame.columnconfigure(11, weight=1)
-        self.button_frame.columnconfigure(12, weight=1)
-        self.button_frame.columnconfigure(13, weight=1)
-        self.button_frame.columnconfigure(14, weight=1)
 
-        self.white_one.grid(row=0, column=0, sticky=tk.W + tk.E)
-        self.red_one.grid(row=0, column=1, sticky=tk.W + tk.E)
-        self.blue_one.grid(row=0, column=2, sticky=tk.W + tk.E)
-        self.yellow_one.grid(row=0, column=3, sticky=tk.W + tk.E)
-
-        self.white_two.grid(row=0, column=4, sticky=tk.W + tk.E)
-        self.red_two.grid(row=0, column=5, sticky=tk.W + tk.E)
-        self.blue_two.grid(row=0, column=6, sticky=tk.W + tk.E)
-        self.yellow_two.grid(row=0, column=7, sticky=tk.W + tk.E)
-
-        self.white_three.grid(row=0, column=8, sticky=tk.W + tk.E)
-        self.red_three.grid(row=0, column=9, sticky=tk.W + tk.E)
-        self.blue_three.grid(row=0, column=10, sticky=tk.W + tk.E)
-        self.yellow_three.grid(row=0, column=11, sticky=tk.W + tk.E)
-
-        self.bar_loaded.grid(row=0, column=12, sticky=tk.W + tk.E)
-        self.start_controller_one.grid(row=0, column=13, sticky=tk.W + tk.E)
-        self.start_controller_two.grid(row=0, column=14, sticky=tk.W + tk.E)
+        self.start_controller_one.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.start_controller_two.grid(row=0, column=1, sticky=tk.W + tk.E)
+        self.exit_button.grid(row=0, column=2, sticky=tk.W + tk.E)
 
         self.w = Canvas(root, width=self.screenWidth, height=self.screenHeight, highlightthickness=0)
+
         self.w.configure(background="#000000")
         self.w.pack()
 
@@ -116,65 +103,98 @@ class MyFirstGUI:
         self.startedWatching = False
         self.firstRun = True
         self.devicesFound = False
-        
+
+    def toggleUseCards(self):
+        self.useCards = not self.useCards
+        print(self.useCards)
+
+
     def getDevices(self):
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
+        print(self.deviceList)
         for device in self.deviceList:
-            #print(device.path, device.name, device.phys)
             self.deviceName = (str(device.name))
-            
-            if self.deviceName == 'Wireless Controller':
-                #print(self.deviceName)
+            if self.deviceName == 'Wireless Controller':# or 'Sony Computer Entertainment Wireless Controller':
                 self.devicePaths.append(device.path)
-                #print(self.devicePaths)
-                
+        print "-------------------- DEVICE PATH -------------"
+        print(self.devicePaths)
+        
         if not self.devicesFound:
-            print(self.devicePaths)
-            self.devices = map(InputDevice, ('/dev/input/event5', '/dev/input/event8'))
+
+            self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))
             self.devices = {dev.fd: dev for dev in self.devices}
             for dev in self.devices.values(): print(dev)
-            r,w,x = select(self.devices, [], [])
-            print(self.devices.keys())
+
             self.r1 = self.devices.keys()[0]
             self.r2 = self.devices.keys()[1]
+            self.r3 = self.devices.keys()[2]
+            
             print(self.r1)
             print(self.r2)
-            self.devicesFound = True
+            print(self.r3)
+
             self.identifyRemoteOne()
             self.identifyRemoteTwo()
+            self.identifyRemoteThree()
+            self.devicesFound = True
             
     def identifyRemoteOne(self):
+        print("Looking for remote one")
         while True:
-            self.w.create_text(800, 400, fill="white", width="800", font="helvetica 30", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
+            self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="1000", font="helvetica 40", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == self.triangleBtn:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
                             self.r_c1 = fd
                             print("r_c1 = " + str(self.r_c1))
                             self.w.delete("RemoteOneInstructions")
-                            self.w.create_text(800, 400, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
+                            self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
                             root.update()
                             return
     
     def identifyRemoteTwo(self):
+        print "looking for remote 2"
         while True:
-            #self.w.delete("confirmConnection")
-            self.w.create_text(800, 600, fill="white", width="800", font="helvetica 30", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
+            self.w.create_text(self.x_centre, self.y_centre, fill="white", width="1000", font="helvetica 40", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
+            print(r)
             for fd in r:
+                print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == self.triangleBtn:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
+                            print fd
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 print("r_c2 = " + str(self.r_c2))
                                 self.w.delete("RemoteTwoInstructions")
-                                self.w.create_text(800, 600, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
+                                self.w.create_text(self.x_centre, self.y_centre, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
+                                root.update()
+                                event.code = 25
+                                return
+
+    def identifyRemoteThree(self):
+        print "looking for remote 3"
+        while True:
+            self.w.create_text(self.x_centre, self.y_centre + self.y_quarter, fill="white", width="1000", font="helvetica 40", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
+            root.update()
+            r,w,x = select(self.devices, [], [])
+            for fd in r:
+                print(fd)
+                for event in self.devices[fd].read():
+                    if event.type == ecodes.EV_KEY:
+                        if event.code == self.triangleBtn and self.devicesFound == False:
+                            print fd
+                            if fd != self.r_c1 and fd != self.r_c2:
+                                self.r_c3 = fd
+                                print("r_c2 = " + str(self.r_c3))
+                                self.w.delete("RemoteThreeInstructions")
+                                self.w.create_text(self.x_centre, self.y_centre + self.y_quarter, fill="white", width="800", font="helvetica 30", text="Remote Three Connected", tag="confirmConnection")
                                 root.update()
                                 event.code = 25
                                 return
@@ -186,33 +206,36 @@ class MyFirstGUI:
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
-                    #print(event)
                         if event.code == self.xBtn and self.watchForDecisions == True:
                             if fd == self.r_c1:
                                 self.judgeOneChosenWhite()
-                                #print("Judge One Chose White")
                                 return
                             elif fd == self.r_c2:
                                 self.judgeTwoChosenWhite()
-                                #print("Judge Two Chose White")
+                                return
+                            elif fd == self.r_c3:
+                                self.judgeThreeChosenWhite()
                                 return
                         elif event.code == self.circleBtn and self.watchForDecisions == True:
                             if fd == self.r_c1:
                                 self.judgeOneChosenRed(color1="red")
-                                #print("Judge One Chose Red")
                                 return
                             elif fd == self.r_c2:
                                 self.judgeTwoChosenRed(color2="red")
-                                #print("Judge Two Chose Red")
                                 return
+                            elif fd == self.r_c3:
+                                self.judgeThreeChosenRed(color3="red")
                         elif event.code == self.squareBtn:
                             if fd == self.r_c1 and self.watchForDecisions == True:
                                 self.judgeThreeChosenRed(color3="red")
-                                #print("Judge One Chose Red")
                                 return
                             elif fd == self.r_c2:
                                 print("Bar loaded button pressed")
                                 self.initBarLoaded()
+                                return
+                        elif event.code == self.triangleBtn:
+                            if fd == self.r_c2 and self.watchForDecisions == True:
+                                self.initBreakTimer()
                                 return
                     
     def judgeOneChosenWhite(self):
@@ -396,43 +419,50 @@ class MyFirstGUI:
             
     def initScoresIn(self):
 
-        print(self.submissionTimerOneRunning)
-
         if not self.submissionTimerOneRunning:
             self.submissionTimerOneValue = 60
             self.submissionTimerOne()
-        elif self.submissionTimerOneRunning and not self.submissionTimerTwoRunning:
-            self.submissionTimerTwoValue = 60
+        elif self.submissionTimerOneRunning and not self.submissionTimerTwoRunning and not self.submissionTimerThreeRunning:
+            self.submissionTimerTwoValue = self.submissionTimerOneValue
+            self.submissionTimerOneValue = 60
             self.submissionTimerTwo()
-        elif self.submissionTimerOneRunning and self.submissionTimerTwoRunning:
-            print("Both Timers Are Running")
+        elif self.submissionTimerOneRunning and self.submissionTimerTwoRunning and not self.submissionTimerThreeRunning:
+            self.submissionTimerThreeValue = self.submissionTimerTwoValue
+            self.submissionTimerTwoValue = self.submissionTimerOneValue
+            self.submissionTimerOneValue = 60
+            self.submissionTimerThree()
+        elif self.submissionTimerOneRunning and self.submissionTimerTwoRunning and self.submissionTimerThreeRunning:
+            self.submissionTimerThreeValue = self.submissionTimerTwoValue
+            self.submissionTimerTwoValue = self.submissionTimerOneValue
+            self.submissionTimerOneValue = 60
+            self.watchRemotes()
 
     def submissionTimerOne(self):
 
         self.submissionTimerOneRunning = True
 
+        self.submissionOne_x = self.screenWidth * 4 / 8
+        self.submissionOne_y = self.screenHeight / 10
+
         self.w.delete("countdown_time_for_submission_one")
 
-        self.w.create_text(self.x_submission_text, self.y_submission_text, fill="white", width="400", font="helvetica 30", text="Time to submit next attempt:")
+        self.w.create_text(self.screenWidth / 8 + 125, self.screenHeight / 10, fill="white", width="550", font="helvetica 40", text="Time to submit next attempt:")
 
         if self.submissionTimerOneValue == 60:
-            self.w.create_text(1240, 70, fill="white", font="helvetica 130", text="1:00", tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.timerFont, text="1:00", tag="countdown_time_for_submission_one")
 
         elif self.submissionTimerOneValue == 10:
-            self.w.create_text(1240, 70, fill="red", font="helvetica 130", text="0:" + str(self.submissionTimerOneValue),
-                               tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.timerFont, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
         elif self.submissionTimerOneValue <= 9:
-            self.w.create_text(1240, 70, fill="red", font="helvetica 130", text="0:0" + str(self.submissionTimerOneValue),
-                               tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.timerFont, text="0:0" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
         else:
-            self.w.create_text(1240, 70, fill="white", font="helvetica 130", text="0:" + str(self.submissionTimerOneValue),
-                               tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.timerFont, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
 
         self.submissionTimerOneValue -= 1
 
         if self.submissionTimerOneValue >= 0:
             self.w.after(1000, self.submissionTimerOne)
-        elif self.scoresIn:
+        elif self.submissionTimerOneValue < 0:
             self.submissionTimerOneRunning = False
             self.w.delete("countdown_time_for_submission_one")
             
@@ -442,37 +472,72 @@ class MyFirstGUI:
 
         self.submissionTimerTwoRunning = True
 
+        self.submissionTwo_x = self.screenWidth * 11/16
+        self.submissionTwo_y = self.screenHeight / 10
+
         self.w.delete("countdown_time_for_submission_two")
 
         if self.submissionTimerTwoValue == 60:
-            self.w.create_text(640, 70, fill="white", font="helvetica 130", text="1:00",
-                               tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.timerFont, text="1:00", tag="countdown_time_for_submission_two")
 
         elif self.submissionTimerTwoValue == 10:
-            self.w.create_text(640, 70, fill="red", font="helvetica 130",
-                               text="0:" + str(self.submissionTimerTwoValue),
-                               tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.timerFont, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+
         elif self.submissionTimerTwoValue <= 9:
-            self.w.create_text(640, 70, fill="red", font="helvetica 130",
-                               text="0:0" + str(self.submissionTimerTwoValue),
-                               tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.timerFont, text="0:0" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+
         else:
-            self.w.create_text(640, 70, fill="white", font="helvetica 130",
-                               text="0:" + str(self.submissionTimerTwoValue),
-                               tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.timerFont, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
 
         self.submissionTimerTwoValue -= 1
 
         if self.submissionTimerTwoValue >= 0:
             self.w.after(1000, self.submissionTimerTwo)
-        elif self.scoresIn:
+        elif self.submissionTimerTwoValue < 0:
             self.submissionTimerTwoRunning = False
             self.w.delete("countdown_time_for_submission_two")
 
+        self.watchRemotes()
+
+    def submissionTimerThree(self):
+
+        self.submissionTimerThreeRunning = True
+
+        self.submissionThree_x = self.screenWidth * 7 / 8
+        self.submissionThree_y = self.screenHeight / 10
+
+        self.w.delete("countdown_time_for_submission_three")
+
+        if self.submissionTimerThreeValue == 60:
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.timerFont,
+                               text="1:00",
+                               tag="countdown_time_for_submission_three")
+
+        elif self.submissionTimerThreeValue == 10:
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.timerFont,
+                               text="0:" + str(self.submissionTimerThreeValue),
+                               tag="countdown_time_for_submission_three")
+        elif self.submissionTimerThreeValue <= 9:
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.timerFont,
+                               text="0:0" + str(self.submissionTimerThreeValue),
+                               tag="countdown_time_for_submission_three")
+        else:
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.timerFont,
+                               text="0:" + str(self.submissionTimerThreeValue),
+                               tag="countdown_time_for_submission_three")
+
+        self.submissionTimerThreeValue -= 1
+
+        if self.submissionTimerThreeValue >= 0:
+            self.w.after(1000, self.submissionTimerThree)
+        elif self.submissionTimerThreeValue < 0:
+            self.submissionTimerThreeRunning = False
+            self.w.delete("countdown_time_for_submission_three")
+
+        self.watchRemotes()
+
     def initBarLoaded(self):
-        print(self.judgeOne)
-        print(self.judgeTwo)
-        print(self.judgeThree)
+        self.allResultsIn = True
         if self.allResultsIn:
             self.allResultsIn = False
             self.w.after_cancel(self.clock)
@@ -489,15 +554,15 @@ class MyFirstGUI:
         if not self.scoresIn:
             self.w.delete("lights", "countdown_time")
             if self.time == 60:
-                self.w.create_text(700, 400, fill="white", font="helvetica 400 bold", text="1:00", tag="countdown_time")
+                self.w.create_text(self.x_centre, self.y_centre, fill="white", font="helvetica 400", text="1:00", tag="countdown_time")
             elif self.time == 10:
-                self.w.create_text(700, 400, fill="red", font="helvetica 400 bold", text="0:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font="helvetica 400", text="0:" + str(self.time),
                                    tag="countdown_time")
             elif self.time <= 9:
-                self.w.create_text(700, 400, fill="red", font="helvetica 400 bold", text="0:0" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font="helvetica 400", text="0:0" + str(self.time),
                                    tag="countdown_time")
             else:
-                self.w.create_text(700, 400, fill="white", font="helvetica 400 bold", text="0:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="white", font="helvetica 400", text="0:" + str(self.time),
                                    tag="countdown_time")
             self.time -= 1
             if self.time >= 0 and not self.scoresIn:
@@ -505,11 +570,85 @@ class MyFirstGUI:
             elif self.scoresIn:
                 self.w.delete("countdown_time")
 
+    def initBreakTimer(self):
+        self.w.delete(ALL)
+        self.breakTimerMin = 9
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def watchRemotesForBreakTimer(self):
+        while True:
+            root.update()
+            r, w, x = select(self.devices, [], [])
+            for fd in r:
+                for event in self.devices[fd].read():
+                    if event.code == self.xBtn and self.watchForDecisions == True:
+                        if fd == self.r_c2:
+                            self.breakTimer()
+                            return
+                    elif event.code == self.circleBtn and self.watchForDecisions == True:
+                        if fd == self.r_c2:
+                            self.addMinutesToCountdown()
+                            return
+                    elif event.code == self.squareBtn:
+                        if fd == self.r_c2:
+                            self.subtractMinutesToCountdown()
+                            return
+
+    def addMinutesToCountdown(self):
+        self.w.delete(ALL)
+        self.breakTimerMin += 1
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def subtractMinutesToCountdown(self):
+        self.w.delete(ALL)
+        self.breakTimerMin -= 1
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def breakTimer(self):
+
+        self.w.delete("countdown_time_for_submission_three")
+
+        if self.breakTimerSec == 60 and self.breakTimerMin == 9:
+            self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont,
+                               text="10:00",
+                               tag="breakTimer")
+
+        elif self.breakTimerSec == 10:
+            self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+        elif self.breakTimerSec <= 9:
+            self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+        else:
+            self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+
+        self.breakTimerSec -= 1
+
+        if self.submissionTimerThreeValue >= 0:
+            self.w.after(1000, self.submissionTimerThree)
+        elif self.submissionTimerThreeValue < 0 and self.breakTimerMin < 0:
+            self.breakTimerMin -= 1
+            self.breakTimerSec = 60
+            self.w.after(1000, self.submissionTimerThree)
+
+        self.watchRemotes()
+
+
 root = Tk()
 gui = MyFirstGUI(root)
 my_gui = MyFirstGUI(root)
-#root.geometry("500x500")
 root.configure(background='black')
+#root.geometry("720x450")
 root.overrideredirect(True)
 root.overrideredirect(False)
 root.attributes('-fullscreen',True)
