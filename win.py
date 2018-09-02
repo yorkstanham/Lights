@@ -233,6 +233,10 @@ class MyFirstGUI:
                                 print("Bar loaded button pressed")
                                 self.initBarLoaded()
                                 return
+                        elif event.code == self.triangleBtn:
+                            if fd == self.r_c2 and self.watchForDecisions == True:
+                                self.initBreakTimer()
+                                return
                     
     def judgeOneChosenWhite(self):
 
@@ -565,6 +569,80 @@ class MyFirstGUI:
                 self.clock = self.w.after(1000, self.barLoaded)
             elif self.scoresIn:
                 self.w.delete("countdown_time")
+
+    def initBreakTimer(self):
+        self.w.delete(ALL)
+        self.breakTimerMin = 9
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def watchRemotesForBreakTimer(self):
+        while True:
+            root.update()
+            r, w, x = select(self.devices, [], [])
+            for fd in r:
+                for event in self.devices[fd].read():
+                    if event.code == self.xBtn and self.watchForDecisions == True:
+                        if fd == self.r_c2:
+                            self.breakTimer()
+                            return
+                    elif event.code == self.circleBtn and self.watchForDecisions == True:
+                        if fd == self.r_c2:
+                            self.addMinutesToCountdown()
+                            return
+                    elif event.code == self.squareBtn:
+                        if fd == self.r_c2:
+                            self.subtractMinutesToCountdown()
+                            return
+
+    def addMinutesToCountdown(self):
+        self.w.delete(ALL)
+        self.breakTimerMin += 1
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def subtractMinutesToCountdown(self):
+        self.w.delete(ALL)
+        self.breakTimerMin -= 1
+        self.breakTimerSec = 60
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        self.watchRemotesForBreakTimer()
+
+    def breakTimer(self):
+
+        self.w.delete("countdown_time_for_submission_three")
+
+        if self.breakTimerSec == 60 and self.breakTimerMin == 9:
+            self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont,
+                               text="10:00",
+                               tag="breakTimer")
+
+        elif self.breakTimerSec == 10:
+            self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+        elif self.breakTimerSec <= 9:
+            self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+        else:
+            self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont,
+                               text=str(self.breakTimerMin) + ":" + str(self.breakTimerSec),
+                               tag="breakTimer")
+
+        self.breakTimerSec -= 1
+
+        if self.submissionTimerThreeValue >= 0:
+            self.w.after(1000, self.submissionTimerThree)
+        elif self.submissionTimerThreeValue < 0 and self.breakTimerMin < 0:
+            self.breakTimerMin -= 1
+            self.breakTimerSec = 60
+            self.w.after(1000, self.submissionTimerThree)
+
+        self.watchRemotes()
+
 
 root = Tk()
 gui = MyFirstGUI(root)
