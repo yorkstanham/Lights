@@ -13,15 +13,28 @@ class Demo1:
         self.x_centre = 150
         self.y_centre = 100
         self.time = 60;
+
+
         self.frame = tk.Frame(root)
+        self.frame.pack(fill=tk.X, side=tk.BOTTOM)
+
         self.button1 = tk.Button(self.frame, text = 'Start', width = 25, command = self.new_window)
-        self.button1.pack()
         self.start_controller_one = tk.Button(self.frame, text='Connect Remotes', command=self.getDevices, fg="white", bg="black")
-        self.start_controller_one.pack()
         self.e = Entry(self.frame,justify='center')
         self.e.insert(0, '01:03')
-        self.e.pack()
-        self.frame.pack()
+
+        self.frame.columnconfigure(0, weight=1)
+        self.frame.columnconfigure(1, weight=1)
+        self.frame.columnconfigure(2, weight=1)
+
+        self.button1.grid(row=0, column=0, sticky=tk.W + tk.E)
+        self.start_controller_one.grid(row=0, column=1, sticky=tk.W + tk.E)
+        self.e.grid(row=0, column=2, sticky=tk.W + tk.E)
+
+        self.home_canvas = Canvas(root, width=self.screenWidth/2, height=self.screenHeight/2, highlightthickness=0)
+        self.home_canvas.configure(background="#FFFFFF")
+        self.home_canvas.pack()
+        
 
     def new_window(self):
         if not self.newWindowCreated:
@@ -63,10 +76,13 @@ class Demo1:
             self.session_break_timer.grid(row=0, column=0, sticky=tk.W + tk.E)
             self.bar_loaded.grid(row=0, column=1, sticky=tk.W + tk.E)
             self.stop_bar_loaded_button.grid(row=0, column=2, sticky=tk.W + tk.E)
-            #self.newWindow.mainloop()
             self.watchRemotes()
 
     def getDevices(self):
+        self.home_canvas.create_text(self.screenWidth/4, self.screenHeight/10, fill="black", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
+        self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="black", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
+        self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*3/10, fill="black", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
+        self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*4/10, fill="black", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
         print(self.deviceList)
@@ -81,7 +97,8 @@ class Demo1:
 
             self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2], self.devicePaths[3]))
             self.devices = {dev.fd: dev for dev in self.devices}
-            for dev in self.devices.values(): print(dev)
+            for dev in self.devices.values(): 
+                print(dev)
 
             self.r1 = self.devices.keys()[0]
             self.r2 = self.devices.keys()[1]
@@ -102,7 +119,7 @@ class Demo1:
     def identify_timer_remote(self):
         print("Looking for timer remote")
         while True:
-            self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
+            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight/10, fill="white", width="1000", font="helvetica 40", text="Press the bar loaded button", tag="bar_loaded_instructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
@@ -111,15 +128,15 @@ class Demo1:
                         if event.code == self.triangleBtn and self.devicesFound == False:
                             self.r_c1 = fd
                             print("r_t1 = " + str(self.r_c1))
-                            self.w.delete("bar_loaded_instructions")
-                            self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
+                            self.home_canvas.delete("bar_loaded_instructions")
+                            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight/10, fill="white", width="800", font="helvetica 30", text="Timer controller connected",tag="confirmConnection")
                             root.update()
                             return
     
     def identifyRemoteOne(self):
         print("Looking for remote one")
         while True:
-            self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="1000", font="helvetica 40", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
+            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="white", width="1000", font="helvetica 40", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
@@ -129,15 +146,15 @@ class Demo1:
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 print("r_c2 = " + str(self.r_c2))
-                                self.w.delete("RemoteOneInstructions")
-                                self.w.create_text(self.x_centre, self.y_quarter, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
+                                self.home_canvas.delete("RemoteOneInstructions")
+                                self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="white", width="800", font="helvetica 30", text="Remote One Connected",tag="confirmConnection")
                                 root.update()
                                 return
     
     def identifyRemoteTwo(self):
         print "looking for remote 2"
         while True:
-            self.w.create_text(self.x_centre, self.y_centre, fill="white", width="1000", font="helvetica 40", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
+            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*3/10, fill="white", width="1000", font="helvetica 40", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             print(r)
@@ -150,8 +167,8 @@ class Demo1:
                             if fd != self.r_c1 and fd != self.r_c2:
                                 self.r_c3 = fd
                                 print("r_c3 = " + str(self.r_c3))
-                                self.w.delete("RemoteTwoInstructions")
-                                self.w.create_text(self.x_centre, self.y_centre, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
+                                self.home_canvas.delete("RemoteTwoInstructions")
+                                self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*3/10, fill="white", width="800", font="helvetica 30", text="Remote Two Connected", tag="confirmConnection")
                                 root.update()
                                 event.code = 25
                                 return
@@ -159,7 +176,7 @@ class Demo1:
     def identifyRemoteThree(self):
         print "looking for remote 3"
         while True:
-            self.w.create_text(self.x_centre, self.y_centre + self.y_quarter, fill="white", width="1000", font="helvetica 40", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
+            self.w.create_text(self.screenWidth/4, self.screenHeight*4/10, fill="white", width="1000", font="helvetica 40", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
@@ -171,8 +188,8 @@ class Demo1:
                             if fd != self.r_c1 and fd != self.r_c2 and fd != self.r_c3:
                                 self.r_c4 = fd
                                 print("r_c4 = " + str(self.r_c4))
-                                self.w.delete("RemoteThreeInstructions")
-                                self.w.create_text(self.x_centre, self.y_centre + self.y_quarter, fill="white", width="800", font="helvetica 30", text="Remote Three Connected", tag="confirmConnection")
+                                self.home_canvas.delete("RemoteThreeInstructions")
+                                self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*4/10, fill="white", width="800", font="helvetica 30", text="Remote Three Connected", tag="confirmConnection")
                                 root.update()
                                 event.code = 25
                                 return
@@ -289,36 +306,6 @@ class Demo1:
         self.continue_break_timer = False
         self.w.delete("breakTimer")
 
-    def getDevices(self):
-        self.devicePaths = []
-        self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
-        print(self.deviceList)
-        for device in self.deviceList:
-            self.deviceName = (str(device.name))
-            if self.deviceName == 'Wireless Controller':# or 'Sony Computer Entertainment Wireless Controller':
-                self.devicePaths.append(device.path)
-        print "-------------------- DEVICE PATH -------------"
-        print(self.devicePaths)
-        
-        if not self.devicesFound:
-
-            self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))
-            self.devices = {dev.fd: dev for dev in self.devices}
-            for dev in self.devices.values(): print(dev)
-
-            self.r1 = self.devices.keys()[0]
-            self.r2 = self.devices.keys()[1]
-            self.r3 = self.devices.keys()[2]
-            
-            print(self.r1)
-            print(self.r2)
-            print(self.r3)
-
-            self.identifyRemoteOne()
-            self.identifyRemoteTwo()
-            self.identifyRemoteThree()
-            self.devicesFound = True
-
     def bar_loaded_manager(self):
         if self.continue_bar_loaded:
             self.stop_bar_loaded()
@@ -365,7 +352,6 @@ class Demo1:
 
 
 def main(): 
-    
     app = Demo1(root)
     root.mainloop()
 
