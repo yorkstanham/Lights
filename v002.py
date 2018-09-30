@@ -61,8 +61,8 @@ class Demo1:
             self.y_centre = Decimal(self.screenHeight)/2
             self.y_quarter = Decimal(self.screenHeight)/4
             self.small_radius = Decimal(root.winfo_screenwidth())/35
-            self.large_radius = Decimal(root.winfo_screenwidth())/8
-            self.x_left = Decimal(root.winfo_screenwidth())/5
+            self.large_radius = Decimal(root.winfo_screenwidth())*4/28
+            self.x_left = Decimal(root.winfo_screenwidth())/5-Decimal(root.winfo_screenwidth())/30
             self.x_right = Decimal(root.winfo_screenwidth())-self.x_left
             self.card_x_radius = self.large_radius/3
             self.card_y_radius = self.large_radius*2/5
@@ -76,6 +76,7 @@ class Demo1:
             self.submissionTimerTwoRunning = False
             self.submissionTimerThreeRunning = False
             self.useCards = False
+            self.countdown_font="helvetica 80"
             ########## PROPERTIES ##########
 
             self.newWindow = Toplevel(bg="black")
@@ -101,8 +102,18 @@ class Demo1:
             self.button_frame.columnconfigure(7, weight=1)
             self.button_frame.columnconfigure(8, weight=1)
             self.button_frame.columnconfigure(9, weight=1)
+            self.button_frame.columnconfigure(10, weight=1)
+            self.button_frame.columnconfigure(11, weight=1)
+            self.button_frame.columnconfigure(12, weight=1)
+            self.button_frame.columnconfigure(13, weight=1)
+            self.button_frame.columnconfigure(14, weight=1)
+            self.button_frame.columnconfigure(15, weight=1)
+            self.button_frame.columnconfigure(16, weight=1)
+            self.button_frame.columnconfigure(17, weight=1)
+            self.button_frame.columnconfigure(18, weight=1)
+            self.button_frame.columnconfigure(19, weight=1)
             
-            self.session_break_timer.grid(row=0, column=9, sticky=tk.W + tk.E)
+            self.session_break_timer.grid(row=0, column=19, sticky=tk.W + tk.E)
             self.bar_loaded.grid(row=0, column=0, sticky=tk.W + tk.E)
             #self.stop_bar_loaded_button.grid(row=0, column=2, sticky=tk.W + tk.E)
             self.watchRemotes()
@@ -284,6 +295,8 @@ class Demo1:
             self.init_break_timer()        
 
     def init_break_timer(self):
+        self.w.delete("submission_text")
+        self.w.delete("countdown_time_for_submission_one")
         self.minutes_for_timer = int(self.parse_countdown_time()[0])
         self.seconds_for_timer = int(self.parse_countdown_time()[1])
 
@@ -382,7 +395,7 @@ class Demo1:
         self.watchRemotes()
 
     def judgeOneChosenWhite(self):
-
+        print(self.r_c1)
         self.x0 = self.x_left - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_left + self.small_radius
@@ -396,7 +409,7 @@ class Demo1:
         self.displayResults()
 
     def judgeTwoChosenWhite(self):
-
+        print(self.r_c2)
         self.x0 = self.x_centre - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_centre + self.small_radius
@@ -410,7 +423,7 @@ class Demo1:
         self.displayResults()
 
     def judgeThreeChosenWhite(self):
-
+        print(self.r_c3)
         self.x0 = self.x_right - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_right + self.small_radius
@@ -424,10 +437,10 @@ class Demo1:
         self.displayResults()
 
     def judgeOneChosenRed(self,color1):
-
-        self.x0 = self.x_right - self.small_radius
+        print(self.r_c1)
+        self.x0 = self.x_left - self.small_radius
         self.y0 = self.y_centre - self.small_radius
-        self.x1 = self.x_right + self.small_radius
+        self.x1 = self.x_left + self.small_radius
         self.y1 = self.y_centre + self.small_radius
 
         self.w.delete("countdown_time")
@@ -438,7 +451,7 @@ class Demo1:
         self.displayResults()
 
     def judgeTwoChosenRed(self,color2):
-
+        print(self.r_c2)
         self.x0 = self.x_centre - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_centre + self.small_radius
@@ -452,7 +465,7 @@ class Demo1:
         self.displayResults()
 
     def judgeThreeChosenRed(self,color3):
-
+        print(self.r_c3)
         self.x0 = self.x_right - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_right + self.small_radius
@@ -590,17 +603,17 @@ class Demo1:
 
         self.w.delete("countdown_time_for_submission_one")
 
-        self.w.create_text(self.screenWidth / 8 + 125, self.screenHeight / 10, fill="white", width="550", font="helvetica 35", text="Time to submit next attempt:")
+        self.w.create_text(self.screenWidth / 8 + 125, self.screenHeight / 10, fill="white", width="750", font="helvetica 40", text="Time to submit next attempt:", tag="submission_text")
 
         if self.submissionTimerOneValue == 60:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font="helvetica 50", text="1:00", tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_one")
 
         elif self.submissionTimerOneValue == 10:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font="helvetica 50", text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
         elif self.submissionTimerOneValue <= 9:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font="helvetica 50", text="0:0" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
         else:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font="helvetica 50", text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
 
         self.submissionTimerOneValue -= 1
 
@@ -622,15 +635,15 @@ class Demo1:
         self.w.delete("countdown_time_for_submission_two")
 
         if self.submissionTimerTwoValue == 60:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font="helvetica 50", text="1:00", tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_two")
         elif self.submissionTimerTwoValue == 10:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font="helvetica 50", text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
 
         elif self.submissionTimerTwoValue <= 9:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font="helvetica 50", text="0:0" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
 
         else:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font="helvetica 50", text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
 
         self.submissionTimerTwoValue -= 1
             
@@ -653,14 +666,14 @@ class Demo1:
         self.w.delete("countdown_time_for_submission_three")
 
         if self.submissionTimerThreeValue == 60:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font="helvetica 50", text="1:00", tag="countdown_time_for_submission_three")
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_three")
 
         elif self.submissionTimerThreeValue == 10:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font="helvetica 50", text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
         elif self.submissionTimerThreeValue <= 9:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font="helvetica 50", text="0:0" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
         else:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font="helvetica 50", text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
 
         self.submissionTimerThreeValue -= 1
         
