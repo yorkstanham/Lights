@@ -6,7 +6,7 @@ import evdev
 from evdev import InputDevice, categorize, ecodes
 import re
 
-class Demo1:
+class lightsGui:
     def __init__(self, master):
         self.master = master
         self.newWindowCreated = False
@@ -55,7 +55,8 @@ class Demo1:
             self.continue_bar_loaded = False
             self.continue_break_timer = False
             self.newWindowCreated = True
-            self.timerFont = "helvetica 600"
+            self.timerFontLarge = "helvetica 500"
+            self.timerFontSmall = "helvetica 400"
             self.x_centre = Decimal(self.screenWidth)/2
             self.x_quarter = Decimal(self.screenWidth)/4
             self.y_centre = Decimal(self.screenHeight)/2
@@ -86,11 +87,7 @@ class Demo1:
             self.button_frame = tk.Frame(self.newWindow, bg='black')
             self.button_frame.pack(fill=tk.X, side=tk.BOTTOM)
             self.bar_loaded = tk.Button(self.button_frame, text='Bar Loaded', command=self.bar_loaded_manager, fg="white", bg="black")
-            #self.bar_loaded.pack()
-            #self.stop_bar_loaded_button = tk.Button(self.button_frame, text='Stop bar loaded timer', command=self.stop_bar_loaded, fg="white", bg="black")
-            #self.stop_bar_loaded_button.pack()
             self.session_break_timer = tk.Button(self.button_frame, text='Start break timer', command=self.break_timer_manager, fg="white", bg="black")
-            #self.session_break_timer.pack()
             self.w = Canvas(self.newWindow, width=self.screenWidth, height=self.screenHeight, highlightthickness=0)
             self.w.configure(background="#000000")
             self.newWindow.attributes('-fullscreen',True)
@@ -115,12 +112,9 @@ class Demo1:
             self.button_frame.columnconfigure(17, weight=1)
             self.button_frame.columnconfigure(18, weight=1)
             self.button_frame.columnconfigure(19, weight=1)
-            
             self.session_break_timer.grid(row=0, column=19, sticky=tk.W + tk.E)
             self.bar_loaded.grid(row=0, column=0, sticky=tk.W + tk.E)
-            #self.stop_bar_loaded_button.grid(row=0, column=2, sticky=tk.W + tk.E)
-            #self.watchRemotes()
-            
+    
         elif not self.devicesFound:
             self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="black", width="1000", font="helvetica 25", text="Press connect the remotes before starting the program", tag="remotesNotConnectedInstructions")
 
@@ -249,14 +243,6 @@ class Demo1:
                             elif fd == self.r_c3:
                                 self.judgeThreeChosenRed(color3="red")
                                 return
-                        '''elif event.code == self.bar_loaded_clicked and event.value == 1:# and self.watchForDecisions == False:
-                            if fd == self.r_c1:
-                                self.bar_loaded_manager()
-                                return
-                        elif event.code == self.break_timer_clicked:# and self.watchForDecisions == False:
-                            if fd == self.r_c1:
-                                self.break_timer_manager()
-                                return'''
     
     def parse_countdown_time(self):
         inputString = str(self.e.get())
@@ -300,7 +286,7 @@ class Demo1:
     def break_timer(self):
         if self.continue_break_timer:
             
-            self.home_canvas.delete("breakTimer")
+            self.w.delete("breakTimer")
 
             print(self.seconds_for_timer)
             print(self.minutes_for_timer)
@@ -312,9 +298,9 @@ class Demo1:
                 elif int(self.minutes_for_timer) < 3:
                     text_colour = 'orange'
                 else:
-                    text_colour = 'black'
+                    text_colour = 'white'
             else:
-                text_colour = 'black'
+                text_colour = 'white'
 
             if self.seconds_for_timer <= 9:
                 self.seconds_for_timer = "0" + str(self.seconds_for_timer)
@@ -323,10 +309,10 @@ class Demo1:
                 self.minutes_for_timer = "0" + str(self.minutes_for_timer)
 
             if self.hours_for_timer > 0:
-                self.home_canvas.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFont, text=str(self.hours_for_timer) + ":" + str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
+                self.w.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFontSmall, text=str(self.hours_for_timer) + ":" + str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
 
             elif self.hours_for_timer == 0:
-                self.home_canvas.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFont, text=str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
+                self.w.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFontLarge, text=str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
 
             self.seconds_for_timer = int(self.seconds_for_timer) - 1
 
@@ -338,9 +324,9 @@ class Demo1:
                     self.hours_for_timer = int(self.hours_for_timer) - 1
 
             if self.seconds_for_timer == 58 and self.minutes_for_timer == 59 and self.hours_for_timer == -1:
-                self.home_canvas.after(10000, self.home_canvas.delete("breakTimer"))
+                self.w.after(10000, self.home_canvas.delete("breakTimer"))
             else:
-                self.home_canvas.after(1000,self.break_timer)
+                self.w.after(1000,self.break_timer)
 
     def stop_break_timer(self):
         self.continue_break_timer = False
@@ -360,14 +346,10 @@ class Demo1:
             self.init_bar_loaded()
 
     def init_bar_loaded(self):
-        if not self.continue_bar_loaded:
-            self.continue_bar_loaded = True
-            self.w.delete("lights", "countdown_time","greenLight")
-            self.time = 60
-            self.barLoaded()
-        else:
-            print("hello")
-            #self.watchRemotes()
+        self.continue_bar_loaded = True
+        self.w.delete("lights", "countdown_time","greenLight")
+        self.time = 60
+        self.barLoaded()
 
     def barLoaded(self):
         print("IN BARLOADED")
@@ -704,7 +686,7 @@ class Demo1:
         return
 
 def main(): 
-    app = Demo1(root)
+    app = lightsGui(root)
     root.mainloop()
 
 if __name__ == '__main__':
