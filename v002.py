@@ -76,6 +76,9 @@ class Demo1:
             self.submissionTimerTwoRunning = False
             self.submissionTimerThreeRunning = False
             self.useCards = False
+            self.run_submission_timers = True
+            self.watchForDecisions = False
+            self.start_watching_remotes = False
             self.countdown_font="helvetica 80"
             ########## PROPERTIES ##########
 
@@ -116,7 +119,7 @@ class Demo1:
             self.session_break_timer.grid(row=0, column=19, sticky=tk.W + tk.E)
             self.bar_loaded.grid(row=0, column=0, sticky=tk.W + tk.E)
             #self.stop_bar_loaded_button.grid(row=0, column=2, sticky=tk.W + tk.E)
-            self.watchRemotes()
+            #self.watchRemotes()
             
         elif not self.devicesFound:
             self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="black", width="1000", font="helvetica 25", text="Press connect the remotes before starting the program", tag="remotesNotConnectedInstructions")
@@ -127,6 +130,7 @@ class Demo1:
             
     def getDevices(self):
         self.home_canvas.delete('remotesNotConnectedInstructions')
+        self.home_canvas.delete('insufficientRemotesConnectedText')
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
         print(self.deviceList)
@@ -138,43 +142,25 @@ class Demo1:
         
         print(self.devicePaths)
         if not self.devicesFound:
-            self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))#, self.devicePaths[3]))
-            self.devices = {dev.fd: dev for dev in self.devices}
-            for dev in self.devices.values(): 
-                print(dev)
+            try:
+                self.devices = map(InputDevice, (self.devicePaths[0], self.devicePaths[1], self.devicePaths[2]))#, self.devicePaths[3]))
+                self.devices = {dev.fd: dev for dev in self.devices}
+                
+                for dev in self.devices.values(): 
+                    print(dev)
+                    print('ine under dev')
+                self.r1 = self.devices.keys()[0]
+                self.r2 = self.devices.keys()[1]
+                self.r3 = self.devices.keys()[2]
 
-            self.r1 = self.devices.keys()[0]
-            self.r2 = self.devices.keys()[1]
-            self.r3 = self.devices.keys()[2]
-            #self.r4 = self.devices.keys()[3]
-            
-            print(self.r1)
-            print(self.r2)
-            print(self.r3)
-            #print(self.r4)
-
-            #self.identify_timer_remote()
-            self.identifyRemoteOne()
-            self.identifyRemoteTwo()
-            self.identifyRemoteThree()
-            self.devicesFound = True
-
-    '''def identify_timer_remote(self):
-        print("Looking for timer remote")
-        while True:
-            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight/10, fill="black", width="1000", font="helvetica 25", text="Press the bar loaded button", tag="bar_loaded_instructions")
-            root.update()
-            r,w,x = select(self.devices, [], [])
-            for fd in r:
-                for event in self.devices[fd].read():
-                    if event.type == ecodes.EV_KEY:
-                        if event.code == self.bar_loaded_clicked and self.devicesFound == False:
-                            self.r_c1 = fd
-                            print("r_t1 = " + str(self.r_c1))
-                            self.home_canvas.delete("bar_loaded_instructions")
-                            self.home_canvas.create_text(self.screenWidth/4, self.screenHeight/10, fill="black", width="800", font="helvetica 30", text="Timer controller connected",tag="confirmConnection")
-                            root.update()
-                            return'''
+                self.identifyRemoteOne()
+                self.identifyRemoteTwo()
+                self.identifyRemoteThree()
+                print('returned from remote 3')
+                self.devicesFound = True
+            except:
+                print("Plese ensure all remotes are connected")
+                self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*2/10, fill="black", width="1000", font="helvetica 25", text="Plese ensure all remotes are connected", tag="insufficientRemotesConnectedText")
     
     def identifyRemoteOne(self):
         print("Looking for remote one")
@@ -199,13 +185,12 @@ class Demo1:
             self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*3/10, fill="black", width="1000", font="helvetica 25", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
-            print(r)
+            #print(r)
             for fd in r:
-                print(fd)
+                #print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
-                            print fd
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 print("r_c2 = " + str(self.r_c2))
@@ -222,11 +207,11 @@ class Demo1:
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
-                print(fd)
+                #print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
-                            print fd
+                            #print fd
                             if fd != self.r_c1 and fd != self.r_c2:
                                 self.r_c3 = fd
                                 print("r_c3 = " + str(self.r_c3))
@@ -235,15 +220,16 @@ class Demo1:
                                 root.update()
                                 event.code = 25
                                 return
-
+            
     def watchRemotes(self):
-        print("WATCHING REMOTES")
+        print(self.watchForDecisions)
         while True:
+            print("WATCH FOR DECISIONS IS TRUE")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
-                        if (event.code == self.white_button_clicked or event.code == self.xBtn) and event.value == 1:# and self.watchForDecisions == True:
+                        if (event.code == self.white_button_clicked or event.code == self.xBtn) and event.value == 1 and self.watchForDecisions == True and not self.continue_break_timer:
                             if fd == self.r_c1:
                                 self.judgeOneChosenWhite()
                                 return
@@ -253,7 +239,7 @@ class Demo1:
                             elif fd == self.r_c3:
                                 self.judgeThreeChosenWhite()
                                 return
-                        elif (event.code == self.red_button_clicked or event.code == self.circleBtn) and event.value == 1:# and self.watchForDecisions == True:
+                        elif (event.code == self.red_button_clicked or event.code == self.circleBtn) and event.value == 1 and self.watchForDecisions == True:
                             if fd == self.r_c1:
                                 self.judgeOneChosenRed(color1="red")
                                 return
@@ -295,6 +281,8 @@ class Demo1:
             self.init_break_timer()        
 
     def init_break_timer(self):
+        self.run_submission_timers = False
+        self.w.delete(ALL)
         self.w.delete("submission_text")
         self.w.delete("countdown_time_for_submission_one")
         self.minutes_for_timer = int(self.parse_countdown_time()[0])
@@ -349,9 +337,16 @@ class Demo1:
 
     def stop_break_timer(self):
         self.continue_break_timer = False
+        self.run_submission_timers = True
+        self.submissionTimerOneRunning = False
+        self.submissionTimerTwoRunning = False
+        self.submissionTimerThreeRunning = False
         self.w.delete("breakTimer")
 
     def bar_loaded_manager(self):
+        self.judgeOne = False
+        self.judgeTwo = False
+        self.judgeThree = False
         if self.continue_bar_loaded:
             self.stop_bar_loaded()
         elif not self.continue_bar_loaded:
@@ -360,17 +355,18 @@ class Demo1:
     def init_bar_loaded(self):
         if not self.continue_bar_loaded:
             self.continue_bar_loaded = True
-            self.w.delete("lights", "countdown_time")
+            self.w.delete("lights", "countdown_time","greenLight")
             self.time = 60
             self.barLoaded()
         else:
-            self.watchRemotes()
+            print("hello")
+            #self.watchRemotes()
 
     def barLoaded(self):
         print("IN BARLOADED")
-        self.scoresIn = False
-        self.watchForDecisions = True
         if self.continue_bar_loaded:
+            self.scoresIn = False
+            self.watchForDecisions = False
             self.w.delete("lights", "countdown_time")
             if self.time == 60:
                 self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="1:00", tag="countdown_time")
@@ -388,20 +384,24 @@ class Demo1:
                 self.clock = self.w.after(1000, self.barLoaded)
             elif self.scoresIn:
                 self.w.delete("countdown_time")
+        else:
+            print("BAR LOADED STOPPED")
+            self.w.delete("greenLight")
+            self.watchForDecisions = True
+            self.watchRemotes()
 
     def stop_bar_loaded(self):
         self.continue_bar_loaded = False
-        self.w.delete("countdown_time")
-        self.watchRemotes()
+        self.w.delete("countdown_time","greenLight")
+        self.w.delete("greenLight")
 
     def judgeOneChosenWhite(self):
-        print(self.r_c1)
+        print("hello")
         self.x0 = self.x_left - self.small_radius
         self.y0 = self.y_centre - self.small_radius
         self.x1 = self.x_left + self.small_radius
         self.y1 = self.y_centre + self.small_radius
 
-        self.w.delete("countdown_time")
         self.scoresIn = True
         self.w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
         self.judgeOne = True
@@ -564,6 +564,7 @@ class Demo1:
             self.judgeTwo = False
             self.judgeThree = False
             self.allResultsIn = True
+            self.watchForDecisions = False
             self.time == 60
             self.initScoresIn()
                 
@@ -592,99 +593,104 @@ class Demo1:
             self.submissionTimerOneValue = 60
             
         self.w.after(30000,self.clearLights)
-        self.watchRemotes()
+        #self.watchRemotes()
         
     def submissionTimerOne(self):
+        #print(self.run_submission_timers)
+        if self.run_submission_timers:
 
-        self.submissionTimerOneRunning = True
+            self.submissionTimerOneRunning = True
 
-        self.submissionOne_x = self.screenWidth * 4 / 8
-        self.submissionOne_y = self.screenHeight / 10
+            self.submissionOne_x = self.screenWidth * 4 / 8
+            self.submissionOne_y = self.screenHeight / 10
 
-        self.w.delete("countdown_time_for_submission_one")
-
-        self.w.create_text(self.screenWidth / 8 + 125, self.screenHeight / 10, fill="white", width="750", font="helvetica 40", text="Time to submit next attempt:", tag="submission_text")
-
-        if self.submissionTimerOneValue == 60:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_one")
-
-        elif self.submissionTimerOneValue == 10:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
-        elif self.submissionTimerOneValue <= 9:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
-        else:
-            self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
-
-        self.submissionTimerOneValue -= 1
-
-        if self.submissionTimerOneValue >= 0:
-            self.w.after(1000, self.submissionTimerOne)
-        elif self.submissionTimerOneValue < 0:
-            self.submissionTimerOneRunning = False
             self.w.delete("countdown_time_for_submission_one")
-        return
+
+            self.w.create_text(self.screenWidth / 8 + 125, self.screenHeight / 10, fill="white", width="750", font="helvetica 40", text="Time to submit next attempt:", tag="submission_text")
+
+            if self.submissionTimerOneValue == 60:
+                self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_one")
+
+            elif self.submissionTimerOneValue == 10:
+                self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+            elif self.submissionTimerOneValue <= 9:
+                self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+            else:
+                self.w.create_text(self.submissionOne_x, self.submissionOne_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerOneValue), tag="countdown_time_for_submission_one")
+
+            self.submissionTimerOneValue -= 1
+
+            if self.submissionTimerOneValue >= 0:
+                self.w.after(1000, self.submissionTimerOne)
+            elif self.submissionTimerOneValue < 0:
+                self.submissionTimerOneRunning = False
+                self.w.delete("countdown_time_for_submission_one")
+            return
                 
                 #self.watchRemotes()
 
     def submissionTimerTwo(self):
-            
-        self.submissionTimerTwoRunning = True
+        #print(self.run_submission_timers)
+        if self.run_submission_timers:
+            self.submissionTimerTwoRunning = True
 
-        self.submissionTwo_x = self.screenWidth * 11/16
-        self.submissionTwo_y = self.screenHeight / 10
-        self.w.delete("countdown_time_for_submission_two")
-
-        if self.submissionTimerTwoValue == 60:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_two")
-        elif self.submissionTimerTwoValue == 10:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
-
-        elif self.submissionTimerTwoValue <= 9:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
-
-        else:
-            self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
-
-        self.submissionTimerTwoValue -= 1
-            
-        if self.submissionTimerTwoValue >= 0:
-            self.w.after(1000, self.submissionTimerTwo)
-        elif self.submissionTimerTwoValue < 0:
-            self.submissionTimerTwoRunning = False
+            self.submissionTwo_x = self.screenWidth * 11/16
+            self.submissionTwo_y = self.screenHeight / 10
             self.w.delete("countdown_time_for_submission_two")
-        return
-                #self.w.after(10000,self.clearLights)
-                #self.watchRemotes()
+
+            if self.submissionTimerTwoValue == 60:
+                self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_two")
+            elif self.submissionTimerTwoValue == 10:
+                self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+
+            elif self.submissionTimerTwoValue <= 9:
+                self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+
+            else:
+                self.w.create_text(self.submissionTwo_x, self.submissionTwo_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerTwoValue), tag="countdown_time_for_submission_two")
+
+            self.submissionTimerTwoValue -= 1
+                
+            if self.submissionTimerTwoValue >= 0:
+                self.w.after(1000, self.submissionTimerTwo)
+            elif self.submissionTimerTwoValue < 0:
+                self.submissionTimerTwoRunning = False
+                self.w.delete("countdown_time_for_submission_two")
+            return
+                    #self.w.after(10000,self.clearLights)
+                    #self.watchRemotes()
 
     def submissionTimerThree(self):
+        #print(self.run_submission_timers)
+        if self.run_submission_timers:
         
-        self.submissionTimerThreeRunning = True
+            self.submissionTimerThreeRunning = True
 
-        self.submissionThree_x = self.screenWidth * 7 / 8
-        self.submissionThree_y = self.screenHeight / 10
+            self.submissionThree_x = self.screenWidth * 7 / 8
+            self.submissionThree_y = self.screenHeight / 10
 
-        self.w.delete("countdown_time_for_submission_three")
-
-        if self.submissionTimerThreeValue == 60:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_three")
-
-        elif self.submissionTimerThreeValue == 10:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
-        elif self.submissionTimerThreeValue <= 9:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
-        else:
-            self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
-
-        self.submissionTimerThreeValue -= 1
-        
-        if self.submissionTimerThreeValue >= 0:
-            self.w.after(1000, self.submissionTimerThree)
-        elif self.submissionTimerThreeValue < 0:
-            self.submissionTimerThreeRunning = False
             self.w.delete("countdown_time_for_submission_three")
-        return
-                #self.w.after(10000,self.clearLights)
-                #self.watchRemotes()
+
+            if self.submissionTimerThreeValue == 60:
+                self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="1:00", tag="countdown_time_for_submission_three")
+
+            elif self.submissionTimerThreeValue == 10:
+                self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+            elif self.submissionTimerThreeValue <= 9:
+                self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="red", font=self.countdown_font, text="0:0" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+            else:
+                self.w.create_text(self.submissionThree_x, self.submissionThree_y, fill="white", font=self.countdown_font, text="0:" + str(self.submissionTimerThreeValue), tag="countdown_time_for_submission_three")
+
+            self.submissionTimerThreeValue -= 1
+            
+            if self.submissionTimerThreeValue >= 0:
+                self.w.after(1000, self.submissionTimerThree)
+            elif self.submissionTimerThreeValue < 0:
+                self.submissionTimerThreeRunning = False
+                self.w.delete("countdown_time_for_submission_three")
+            return
+                    #self.w.after(10000,self.clearLights)
+                    #self.watchRemotes()
                 
     def clearLights(self):
         self.w.delete("lights")
