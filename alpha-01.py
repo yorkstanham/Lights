@@ -179,9 +179,7 @@ class lightsGui:
             self.home_canvas.create_text(self.screenWidth/4, self.screenHeight*3/10, fill="black", width="1000", font="helvetica 25", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
-            #print(r)
             for fd in r:
-                #print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
@@ -201,7 +199,6 @@ class lightsGui:
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
-                #print(fd)
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == self.triangleBtn and self.devicesFound == False:
@@ -582,10 +579,9 @@ class lightsGui:
             self.submissionTimerOneValue = 60
             
         self.w.after(30000,self.clearLights)
-        #self.watchRemotes()
         
     def submissionTimerOne(self):
-        #print(self.run_submission_timers)
+
         if self.run_submission_timers:
 
             self.submissionTimerOneRunning = True
@@ -615,11 +611,9 @@ class lightsGui:
                 self.submissionTimerOneRunning = False
                 self.w.delete("countdown_time_for_submission_one")
             return
-                
-                #self.watchRemotes()
-
+          
     def submissionTimerTwo(self):
-        #print(self.run_submission_timers)
+
         if self.run_submission_timers:
             self.submissionTimerTwoRunning = True
 
@@ -646,11 +640,9 @@ class lightsGui:
                 self.submissionTimerTwoRunning = False
                 self.w.delete("countdown_time_for_submission_two")
             return
-                    #self.w.after(10000,self.clearLights)
-                    #self.watchRemotes()
 
     def submissionTimerThree(self):
-        #print(self.run_submission_timers)
+
         if self.run_submission_timers:
         
             self.submissionTimerThreeRunning = True
@@ -678,8 +670,6 @@ class lightsGui:
                 self.submissionTimerThreeRunning = False
                 self.w.delete("countdown_time_for_submission_three")
             return
-                    #self.w.after(10000,self.clearLights)
-                    #self.watchRemotes()
                 
     def clearLights(self):
         self.w.delete("lights")
