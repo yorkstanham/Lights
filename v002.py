@@ -358,15 +358,15 @@ class lightsGui:
             self.watchForDecisions = False
             self.w.delete("lights", "countdown_time")
             if self.time == 60:
-                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="1:00", tag="countdown_time")
+                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="1:00", tag="countdown_time")
             elif self.time == 10:
-                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont, text="0:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="00:" + str(self.time),
                                    tag="countdown_time")
             elif self.time <= 9:
-                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFont, text="0:0" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="00:0" + str(self.time),
                                    tag="countdown_time")
             else:
-                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="0:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="00:" + str(self.time),
                                    tag="countdown_time")
             self.time -= 1
             if self.time >= 0 and not self.scoresIn:
