@@ -5,6 +5,10 @@ from select import select
 import evdev
 from evdev import InputDevice, categorize, ecodes
 import re
+import datetime
+from datetime import timedelta 
+import time
+import math
 
 class lightsGui:
     def __init__(self, master):
