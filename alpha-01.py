@@ -278,52 +278,38 @@ class lightsGui:
             self.hours_for_timer -= 1
 
         self.w.delete(ALL)
+        self.final_time = datetime.datetime.now() + timedelta(hours=self.hours_for_timer,minutes=self.minutes_for_timer,seconds=self.seconds_for_timer)
+        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
         self.break_timer()
 
     def break_timer(self):
-        if self.continue_break_timer:
+        self.text_colour = 'black'
+        self.w.delete("breakTimer")
+
+        self.time_remaining = self.final_time - datetime.datetime.now()
+        self.seconds_remaining =(math.ceil(self.time_remaining.total_seconds()))
+        
+        self.hours_left = int(self.seconds_remaining//3600)
+        self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
+        self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
+
+        if self.minutes_left < 10:
+            self.text_colour = "orange"
+            if self.minutes_left < 3:
+                self.text_colour = "red"
+
+            self.minutes_left = "0" + str(self.minutes_left)
             
-            self.w.delete("breakTimer")
 
-            print(self.seconds_for_timer)
-            print(self.minutes_for_timer)
-            print(self.hours_for_timer)
+        if self.seconds_left < 10:
+            self.seconds_left = "0" + str(self.seconds_left)
 
-            if self.hours_for_timer <= 0:
-                if int(self.minutes_for_timer) < 1:
-                    text_colour = 'red'
-                elif int(self.minutes_for_timer) < 3:
-                    text_colour = 'orange'
-                else:
-                    text_colour = 'white'
-            else:
-                text_colour = 'white'
+        if self.hours_left > 0:
+            self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFont, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
+        elif self.hours_left == 0:
+            self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFont, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
 
-            if self.seconds_for_timer <= 9:
-                self.seconds_for_timer = "0" + str(self.seconds_for_timer)
-
-            if self.minutes_for_timer <= 9:
-                self.minutes_for_timer = "0" + str(self.minutes_for_timer)
-
-            if self.hours_for_timer > 0:
-                self.w.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFontSmall, text=str(self.hours_for_timer) + ":" + str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
-
-            elif self.hours_for_timer == 0:
-                self.w.create_text(self.x_centre, self.y_centre, fill=text_colour, font=self.timerFontLarge, text=str(self.minutes_for_timer)+ ":" + str(self.seconds_for_timer), tag="breakTimer")
-
-            self.seconds_for_timer = int(self.seconds_for_timer) - 1
-
-            if int(self.seconds_for_timer) < 0:
-                self.seconds_for_timer = 59
-                self.minutes_for_timer = int(self.minutes_for_timer) - 1
-                if int(self.minutes_for_timer) == -1:
-                    self.minutes_for_timer = 59
-                    self.hours_for_timer = int(self.hours_for_timer) - 1
-
-            if self.seconds_for_timer == 58 and self.minutes_for_timer == 59 and self.hours_for_timer == -1:
-                self.w.after(10000, self.home_canvas.delete("breakTimer"))
-            else:
-                self.w.after(1000,self.break_timer)
+        self.w.after(1000,self.break_timer)
 
     def stop_break_timer(self):
         self.continue_break_timer = False
