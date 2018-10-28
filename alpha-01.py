@@ -135,7 +135,7 @@ class lightsGui:
         for device in self.deviceList:
             self.deviceName = (str(device.name))
             print(self.deviceName)
-            if self.deviceName == 'Adafruit Bluefruit LE' or self.deviceName == 'AB Shutter3' or self.deviceName == 'Sony Computer Entertainment Wireless Controller' or self.deviceName == 'Wireless Controller':
+            if self.deviceName == 'Adafruit Bluefruit LE' or self.deviceName == 'Adafruit Bluefruit LE D9C3' or self.deviceName == 'Sony Computer Entertainment Wireless Controller' or self.deviceName == 'Wireless Controller':
                 self.devicePaths.append(device.path)
         
         print(self.devicePaths)
@@ -205,7 +205,7 @@ class lightsGui:
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == self.triangleBtn and self.devicesFound == False:
+                        if event.code == self.white_button_clicked and self.devicesFound == False:
                             #print fd
                             if fd != self.r_c1 and fd != self.r_c2:
                                 self.r_c3 = fd
@@ -224,7 +224,7 @@ class lightsGui:
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
-                        if (event.code == self.white_button_clicked or event.code == self.xBtn) and event.value == 1 and self.watchForDecisions == True and not self.continue_break_timer:
+                        if (event.code == self.white_button_clicked or event.code == self.xBtn) and event.value == 1 and self.watchForDecisions == True:
                             if fd == self.r_c1:
                                 self.judgeOneChosenWhite()
                                 return
@@ -283,37 +283,38 @@ class lightsGui:
 
         self.w.delete(ALL)
         self.final_time = datetime.datetime.now() + timedelta(hours=self.hours_for_timer,minutes=self.minutes_for_timer,seconds=self.seconds_for_timer)
-        self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFont, text="10:00", tag="breakTimer")
+        #self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="10:00", tag="breakTimer")
         self.break_timer()
 
     def break_timer(self):
-        self.text_colour = 'black'
-        self.w.delete("breakTimer")
+        if self.continue_break_timer:
+            self.text_colour = 'white'
+            self.w.delete("breakTimer")
 
-        self.time_remaining = self.final_time - datetime.datetime.now()
-        self.seconds_remaining =(math.ceil(self.time_remaining.total_seconds()))
-        
-        self.hours_left = int(self.seconds_remaining//3600)
-        self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
-        self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
-
-        if self.minutes_left < 10:
-            self.text_colour = "orange"
-            if self.minutes_left < 3:
-                self.text_colour = "red"
-
-            self.minutes_left = "0" + str(self.minutes_left)
+            self.time_remaining = self.final_time - datetime.datetime.now()
+            self.seconds_remaining =(math.ceil(self.time_remaining.total_seconds()))
             
+            self.hours_left = int(self.seconds_remaining//3600)
+            self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
+            self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
 
-        if self.seconds_left < 10:
-            self.seconds_left = "0" + str(self.seconds_left)
+            if self.minutes_left < 10:
+                self.text_colour = "orange"
+                if self.minutes_left < 3:
+                    self.text_colour = "red"
 
-        if self.hours_left > 0:
-            self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFont, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
-        elif self.hours_left == 0:
-            self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFont, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
+                self.minutes_left = "0" + str(self.minutes_left)
+                
 
-        self.w.after(1000,self.break_timer)
+            if self.seconds_left < 10:
+                self.seconds_left = "0" + str(self.seconds_left)
+
+            if self.hours_left > 0:
+                self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFontSmall, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
+            elif self.hours_left == 0:
+                self.w.create_text(self.x_centre, self.y_centre, fill=self.text_colour, font=self.timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
+
+            self.w.after(1000,self.break_timer)
 
     def stop_break_timer(self):
         self.continue_break_timer = False
@@ -321,6 +322,7 @@ class lightsGui:
         self.submissionTimerOneRunning = False
         self.submissionTimerTwoRunning = False
         self.submissionTimerThreeRunning = False
+        self.w.delete(ALL)
         self.w.delete("breakTimer")
 
     def bar_loaded_manager(self):
@@ -347,13 +349,13 @@ class lightsGui:
             if self.time == 60:
                 self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="1:00", tag="countdown_time")
             elif self.time == 10:
-                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="00:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="0:" + str(self.time),
                                    tag="countdown_time")
             elif self.time <= 9:
-                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="00:0" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="red", font=self.timerFontLarge, text="0:0" + str(self.time),
                                    tag="countdown_time")
             else:
-                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="00:" + str(self.time),
+                self.w.create_text(self.x_centre, self.y_centre, fill="white", font=self.timerFontLarge, text="0:" + str(self.time),
                                    tag="countdown_time")
             self.time -= 1
             if self.time >= 0 and not self.scoresIn:
@@ -672,3 +674,4 @@ def main():
 if __name__ == '__main__':
     root = tk.Tk()
     main()
+
