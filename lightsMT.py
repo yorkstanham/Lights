@@ -28,23 +28,16 @@ class lightsGui(threading.Thread):
         ########## BUTTON MAPPING ##########
         global white_button_clicked 
         white_button_clicked = 45
-        self.red_button_clicked = 44
-        self.green_button_clicked = 31
-        self.bar_loaded_clicked = 450
-        self.break_timer_clicked = 307
-        self.triangleBtn = 307
-        self.xBtn = 304
-        self.circleBtn = 305
         ########## BUTTON MAPPING ##########
 
         self.frame = tk.Frame(root)
         self.frame.pack(fill=tk.X, side=tk.BOTTOM)
-
-        self.button1 = tk.Button(self.frame, text = 'Start', width = 25, command = self.new_window)
+        self.button1 = tk.Button(self.frame, text = 'Start', width = 25, command = self.new_window, state=DISABLED)
         self.start_controller_one = tk.Button(self.frame, text='Connect Remotes', command=self.getDevices)
-        self.session_break_timer = tk.Button(self.frame, text='Start break timer', command=self.break_timer_manager)
+        self.session_break_timer = tk.Button(self.frame, text="Start break timer", command=self.break_timer_manager, state=DISABLED)
         self.e = Entry(self.frame,justify='center')
-        self.e.insert(0, '00:10:00')
+        self.e.insert(0, '00:00:05')
+        root.title("Lights System - Control pane")
 
         self.frame.columnconfigure(0, weight=1)
         self.frame.columnconfigure(1, weight=1)
@@ -58,6 +51,7 @@ class lightsGui(threading.Thread):
 
         self.home_canvas = Canvas(root, width=screenWidth/2, height=screenHeight/2, highlightthickness=0)
         self.home_canvas.configure(background="#FFFFFF")
+        self.home_canvas.create_text(screenWidth/4, screenHeight/4, fill="black", width="1000", font="helvetica 25", text="Click the connect remotes button to begin setup", tag="introText")
         print("Original canvas height = " + str(self.home_canvas.winfo_height()))
         self.home_canvas.pack()
         root.geometry(str(screenWidth/2)+"x"+str(screenHeight/2))
@@ -117,7 +111,8 @@ class lightsGui(threading.Thread):
             useCards = False
             global run_submission_timers
             run_submission_timers = True
-            watchForDecisions = False
+            global watchForDecisions
+            watchForDecisions = True
             self.start_watching_remotes = False
             global countdown_font
             countdown_font="helvetica 80"
@@ -131,9 +126,10 @@ class lightsGui(threading.Thread):
             ########## PROPERTIES ##########
 
             self.newWindow = Toplevel(bg="black")
-            #self.button_frame = tk.Frame(self.newWindow, bg='black')
-            #self.button_frame.pack(fill=tk.X, side=tk.BOTTOM)
-            #self.bar_loaded = tk.Button(self.button_frame, text='Bar Loaded', command=self.bar_loaded_manager, fg="white", bg="black")
+            self.newWindow.title("Lights System - Display")
+            self.session_break_timer.config(state=NORMAL)
+            self.home_canvas.delete("remoteConfirmationText")
+            self.home_canvas.create_text(screenWidth/4, screenHeight/4, fill="black", width="1000", font="helvetica 25", text="The lights system is running!", tag="systemRunningText")
             
             global w
             w = Canvas(self.newWindow, width=screenWidth, height=screenHeight, highlightthickness=0)
@@ -158,6 +154,7 @@ class lightsGui(threading.Thread):
         self.start_controller_one.config(state=DISABLED)
         self.home_canvas.delete('remotesNotConnectedInstructions')
         self.home_canvas.delete('insufficientRemotesConnectedText')
+        self.home_canvas.delete('introText')
         self.devicePaths = []
         self.deviceList = [evdev.InputDevice(path) for path in evdev.list_devices()]
         print(self.deviceList)
@@ -178,6 +175,7 @@ class lightsGui(threading.Thread):
                 for dev in self.devices.values(): 
                     print(dev)
                     print('ine under dev')
+                    
                 self.r1 = self.devices.keys()[0]
                 self.r2 = self.devices.keys()[1]
                 self.r3 = self.devices.keys()[2]
@@ -186,7 +184,10 @@ class lightsGui(threading.Thread):
                 self.identifyRemoteTwo()
                 self.identifyRemoteThree()
                 print('returned from remote 3')
+                self.home_canvas.delete("confirmConnection")
+                self.home_canvas.create_text(screenWidth/4, screenHeight*2/10, fill="black", width="1000", font="helvetica 25", text="All remotes are connected! You can now start the lights system", tag="remoteConfirmationText")
                 self.devicesFound = True
+                self.button1.config(state=NORMAL)
             except Exception,e:
                 print(str(e))
                 self.start_controller_one.config(state=NORMAL)
@@ -196,7 +197,7 @@ class lightsGui(threading.Thread):
     def identifyRemoteOne(self):
         print("Looking for remote one")
         while True:
-            self.home_canvas.create_text(screenWidth/4, screenHeight*2/16, fill="black", width="1000", font="helvetica 25", text="Press the white light on the left judge's control", tag="RemoteOneInstructions")
+            self.home_canvas.create_text(screenWidth/4, screenHeight*2/16, fill="black", width="1000", font="helvetica 25", text="Press the white light button on the left judge's control", tag="RemoteOneInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
@@ -215,13 +216,13 @@ class lightsGui(threading.Thread):
     def identifyRemoteTwo(self):
         print "looking for remote 2"
         while True:
-            self.home_canvas.create_text(screenWidth/4, screenHeight/4, fill="black", width="1000", font="helvetica 25", text="Press the white light on the centre judge's control", tag="RemoteTwoInstructions")
+            self.home_canvas.create_text(screenWidth/4, screenHeight/4, fill="black", width="1000", font="helvetica 25", text="Press the bar loaded button on the centre judge's control", tag="RemoteTwoInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == white_button_clicked and self.devicesFound == False:
+                        if event.code == 31 and self.devicesFound == False:
                             if fd != self.r_c1:
                                 self.r_c2 = fd
                                 global rc2
@@ -236,14 +237,13 @@ class lightsGui(threading.Thread):
     def identifyRemoteThree(self):
         print "looking for remote 3"
         while True:
-            self.home_canvas.create_text(screenWidth/4, screenHeight*3/8, fill="black", width="1000", font="helvetica 25", text="Press the white light on the right judge's control", tag="RemoteThreeInstructions")
+            self.home_canvas.create_text(screenWidth/4, screenHeight*3/8, fill="black", width="1000", font="helvetica 25", text="Press the white light button on the right judge's control", tag="RemoteThreeInstructions")
             root.update()
             r,w,x = select(self.devices, [], [])
             for fd in r:
                 for event in self.devices[fd].read():
                     if event.type == ecodes.EV_KEY:
                         if event.code == white_button_clicked and self.devicesFound == False:
-                            #print fd
                             if fd != self.r_c1 and fd != self.r_c2:
                                 self.r_c3 = fd
                                 global rc3
@@ -254,11 +254,7 @@ class lightsGui(threading.Thread):
                                 root.update()
                                 event.code = 25
                                 return
-            
-    
-                            
-        #elf.w.after(5000,watchRemotes)
-    
+      
     def parse_countdown_time(self):
         inputString = str(self.e.get())
         self.hours = re.search('^(.*?)(?=\\:)',inputString)
@@ -276,9 +272,15 @@ class lightsGui(threading.Thread):
         global continue_break_timer
         if continue_break_timer :
             continue_break_timer  = False
+            global watchForDecisions
+            watchForDecisions = True
+            self.session_break_timer['text'] = 'Start break timer'
             self.stop_break_timer()
         elif not continue_break_timer :
             continue_break_timer  = True
+            global watchForDecisions
+            watchForDecisions = False
+            self.session_break_timer['text'] = 'Stop break timer'
             self.init_break_timer()        
 
     def init_break_timer(self):
@@ -303,13 +305,15 @@ class lightsGui(threading.Thread):
         self.break_timer()
 
     def break_timer(self):
-        if continue_break_timer :
+        
+        if continue_break_timer:
+            
             self.text_colour = 'white'
             w.delete("breakTimer")
 
             self.time_remaining = self.final_time - datetime.datetime.now()
             self.seconds_remaining =(math.ceil(self.time_remaining.total_seconds()))
-            
+
             self.hours_left = int(self.seconds_remaining//3600)
             self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
             self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
@@ -320,17 +324,43 @@ class lightsGui(threading.Thread):
                     self.text_colour = "red"
 
                 self.minutes_left = str(self.minutes_left)
+            print(int(self.hours_left))
+            print(int(self.minutes_left))
+            print(int(self.seconds_left))
+            if int(self.hours_left) == -1 and int(self.minutes_left) == 59 and int(self.seconds_left) == 59:
+                print("Timer finished. Watching for remote inputs...")
+                global watchForDecisions
+                watchForDecisions = True
+                global run_submission_timers
+                run_submission_timers = True
+                global continue_break_timer
+                continue_break_timer = False
+                global continue_break_timer
+                continue_break_timer = False
+                global run_submission_timers
+                run_submission_timers = True
+                global submissionTimerOneRunning
+                submissionTimerOneRunning = False
+                global submissionTimerTwoRunning
+                submissionTimerTwoRunning = False
+                global submissionTimerThreeRunning
+                submissionTimerThreeRunning = False
+                self.session_break_timer['text'] = 'Start break timer'
+                w.create_text(x_centre, y_centre, fill="red", font=timerFontLarge, text="0:00", tag="endBreakTimer")
+                    
+            #elif int(self.hours_left) != -1 and int(self.minutes_left) != 59 and int(self.seconds_left) != 59:
+            else:   
+                if self.seconds_left < 10:
+                    self.seconds_left = "0" + str(self.seconds_left)
+
+                if self.hours_left > 0:
+                    w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontSmall, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
+                elif self.hours_left == 0:
+                    w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
                 
-
-            if self.seconds_left < 10:
-                self.seconds_left = "0" + str(self.seconds_left)
-
-            if self.hours_left > 0:
-                w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontSmall, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
-            elif self.hours_left == 0:
-                w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
-
-            w.after(1000,self.break_timer)
+                w.after(1000,self.break_timer)
+                    
+            
 
     def stop_break_timer(self):
         global continue_break_timer
@@ -346,8 +376,7 @@ class lightsGui(threading.Thread):
         w.delete(ALL)
         w.delete("breakTimer")
 
-    def bar_loaded_manager(self):
-        print("In bar_loaded_manager")
+    def bar_loaded_manager(self):      
         global decisionOnScreen
         decisionOnScreen = False
         judgeOne = False
@@ -361,7 +390,7 @@ class lightsGui(threading.Thread):
     def init_bar_loaded(self):
         global continue_bar_loaded
         continue_bar_loaded = True
-        w.delete("lights", "countdown_time","greenLight")
+        w.delete("lights", "countdown_time","greenLight","endBreakTimer")
         self.time = 60
         self.barLoaded()
             
@@ -392,8 +421,8 @@ class lightsGui(threading.Thread):
         else:
             print("BAR LOADED STOPPED")
             
-            watchForDecisions = True
-            watchRemotesAllTime().start()
+            #watchForDecisions = True
+            #watchRemotesAllTime().start()
             #watchRemotes()
         #watchRemotesAllTime().start()  
         
@@ -411,7 +440,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_left + small_radius
             self.y1 = y_centre + small_radius
             
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeOne
@@ -428,7 +457,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_centre + small_radius
             self.y1 = y_centre + small_radius
 
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeTwo
@@ -444,7 +473,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_right + small_radius
             self.y1 = y_centre + small_radius
 
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeThree
@@ -460,7 +489,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_left + small_radius
             self.y1 = y_centre + small_radius
 
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeOne
@@ -476,7 +505,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_centre + small_radius
             self.y1 = y_centre + small_radius
 
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeTwo
@@ -492,7 +521,7 @@ class lightsGui(threading.Thread):
             self.x1 = x_right + small_radius
             self.y1 = y_centre + small_radius
 
-            w.delete("countdown_time")
+            w.delete("countdown_time","endBreakTimer")
             self.scoresIn = True
             w.create_oval(self.x0, self.y0, self.x1, self.y1, fill="#00ff00", outline="#00ff00",tag="greenLight")
             global judgeThree
@@ -548,7 +577,7 @@ class lightsGui(threading.Thread):
         if judgeOne == True and judgeTwo == True and judgeThree == True:
 
             w.delete("greenLight")
-            watchForDecisions = False
+            #watchForDecisions = False
             decisionOnScreen = True
             
             if judgeOneChoice == "white":
@@ -600,7 +629,7 @@ class lightsGui(threading.Thread):
             judgeTwo = False
             judgeThree = False
             self.allResultsIn = True
-            watchForDecisions = False
+            #watchForDecisions = False
             self.time == 60
             self.initScoresIn()
                 
@@ -768,7 +797,7 @@ class watchRemotesAllTime(threading.Thread):
             for fd in r:
                 for event in deviceList[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == 45 and event.value == 1:# and watchForDecisions == True:
+                        if event.code == 45 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenWhite()
                                 #return
@@ -778,7 +807,7 @@ class watchRemotesAllTime(threading.Thread):
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenWhite()
                                 #return
-                        elif event.code == 44 and event.value == 1:# and watchForDecisions == True:
+                        elif event.code == 44 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenRed(color1="red")
                                 #return
@@ -788,7 +817,7 @@ class watchRemotesAllTime(threading.Thread):
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenRed(color3="red")
                                 #return
-                        elif event.code == 31 and event.value == 1:# and event.type == 1:# and watchForDecisions == False:
+                        elif event.code == 31 and event.value == 1 and watchForDecisions == True:
                             print(event.code)
                             print(event.value)
                             print(fd)
