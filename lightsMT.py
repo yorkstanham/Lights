@@ -301,7 +301,6 @@ class lightsGui(threading.Thread):
 
         w.delete(ALL)
         self.final_time = datetime.datetime.now() + timedelta(hours=self.hours_for_timer,minutes=self.minutes_for_timer,seconds=self.seconds_for_timer)
-        #w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text="10:00", tag="breakTimer")
         self.break_timer()
 
     def break_timer(self):
@@ -324,9 +323,7 @@ class lightsGui(threading.Thread):
                     self.text_colour = "red"
 
                 self.minutes_left = str(self.minutes_left)
-            print(int(self.hours_left))
-            print(int(self.minutes_left))
-            print(int(self.seconds_left))
+
             if int(self.hours_left) == -1 and int(self.minutes_left) == 59 and int(self.seconds_left) == 59:
                 print("Timer finished. Watching for remote inputs...")
                 global watchForDecisions
@@ -348,7 +345,6 @@ class lightsGui(threading.Thread):
                 self.session_break_timer['text'] = 'Start break timer'
                 w.create_text(x_centre, y_centre, fill="red", font=timerFontLarge, text="0:00", tag="endBreakTimer")
                     
-            #elif int(self.hours_left) != -1 and int(self.minutes_left) != 59 and int(self.seconds_left) != 59:
             else:   
                 if self.seconds_left < 10:
                     self.seconds_left = "0" + str(self.seconds_left)
@@ -359,8 +355,6 @@ class lightsGui(threading.Thread):
                     w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
                 
                 w.after(1000,self.break_timer)
-                    
-            
 
     def stop_break_timer(self):
         global continue_break_timer
@@ -399,7 +393,7 @@ class lightsGui(threading.Thread):
         print("CONTINUE BAR LOADED IS "+str(continue_bar_loaded))
         if continue_bar_loaded:
             self.scoresIn = False
-            #watchForDecisions = False
+           
             w.delete("lights", "countdown_time")
             if self.time == 60:
                 w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text="1:00", tag="countdown_time")
@@ -420,17 +414,11 @@ class lightsGui(threading.Thread):
                 w.delete("countdown_time")
         else:
             print("BAR LOADED STOPPED")
-            
-            #watchForDecisions = True
-            #watchRemotesAllTime().start()
-            #watchRemotes()
-        #watchRemotesAllTime().start()  
         
     def stop_bar_loaded(self):
         global continue_bar_loaded
         continue_bar_loaded = False
         w.delete("countdown_time")
-        #w.delete("greenLight")
         return
 
     def judgeOneChosenWhite(self):
@@ -629,14 +617,12 @@ class lightsGui(threading.Thread):
             judgeTwo = False
             judgeThree = False
             self.allResultsIn = True
-            #watchForDecisions = False
             self.time == 60
             self.initScoresIn()
                 
         else:
             root.update()
             print("Results are missing")
-            #watchRemotesAllTime().start()
                 
     def initScoresIn(self):
         
@@ -782,8 +768,7 @@ class lightsGui(threading.Thread):
 
 class watchRemotesAllTime(threading.Thread):
     def __init__(self):
-        print("Starting watchRemotesAllTime")
-            
+        print("Starting watchRemotesAllTime")  
         threading.Thread.__init__(self)
         
     def run(self):
@@ -800,30 +785,24 @@ class watchRemotesAllTime(threading.Thread):
                         if event.code == 45 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenWhite()
-                                #return
                             elif fd == rc2:
                                 lightsGuiJO.judgeTwoChosenWhite()
-                                #return
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenWhite()
-                                #return
                         elif event.code == 44 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenRed(color1="red")
-                                #return
                             elif fd == rc2:
                                 lightsGuiJO.judgeTwoChosenRed(color2="red")
-                                #return
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenRed(color3="red")
-                                #return
                         elif event.code == 31 and event.value == 1 and watchForDecisions == True:
                             print(event.code)
                             print(event.value)
                             print(fd)
                             if fd == rc2:
                                 lightsGuiJO.bar_loaded_manager()
-                                #return
+
 def main(): 
     app = lightsGui(root)
     root.mainloop()
