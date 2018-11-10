@@ -36,7 +36,7 @@ class lightsGui(threading.Thread):
         self.start_controller_one = tk.Button(self.frame, text='Connect Remotes', command=self.getDevices)
         self.session_break_timer = tk.Button(self.frame, text="Start break timer", command=self.break_timer_manager, state=DISABLED)
         self.e = Entry(self.frame,justify='center')
-        self.e.insert(0, '00:00:05')
+        self.e.insert(0, '01:10:05')
         root.title("Lights System - Control pane")
 
         self.frame.columnconfigure(0, weight=1)
@@ -120,16 +120,6 @@ class lightsGui(threading.Thread):
             clock = "ClockRunning"
             global decisionOnScreen
             decisionOnScreen = False
-            global inSetCountdownTimer
-            inSetCountdownTimer = False
-            global defaultTimerStart
-            defaultTimerStart = 10
-            global timeOnScreen
-            timeOnScreen = False
-            global dynamic_countdown_timer_active
-            dynamic_countdown_timer_active = False
-            global continue_dynamic_countdown_timer
-            continue_dynamic_countdown_timer = False
             global submissionTimerOneValue
             global submissionTimerTwoValue
             global submissionTimerThreeValue
@@ -294,6 +284,7 @@ class lightsGui(threading.Thread):
             self.init_break_timer()        
 
     def init_break_timer(self):
+        self.stop_bar_loaded()
         global run_submission_timers
         run_submission_timers = False
         w.delete(ALL)
@@ -311,6 +302,7 @@ class lightsGui(threading.Thread):
 
         w.delete(ALL)
         self.final_time = datetime.datetime.now() + timedelta(hours=self.hours_for_timer,minutes=self.minutes_for_timer,seconds=self.seconds_for_timer)
+        #w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text="10:00", tag="breakTimer")
         self.break_timer()
 
     def break_timer(self):
@@ -327,13 +319,13 @@ class lightsGui(threading.Thread):
             self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
             self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
 
-            if self.minutes_left < 10:
+            if self.hours_left < 1 and self.minutes_left < 10:
                 self.text_colour = "orange"
-                if self.minutes_left < 3:
+                if self.hours_left < 1 and self.minutes_left < 3:
                     self.text_colour = "red"
 
                 self.minutes_left = str(self.minutes_left)
-
+                
             if int(self.hours_left) == -1 and int(self.minutes_left) == 59 and int(self.seconds_left) == 59:
                 print("Timer finished. Watching for remote inputs...")
                 global watchForDecisions
@@ -355,16 +347,27 @@ class lightsGui(threading.Thread):
                 self.session_break_timer['text'] = 'Start break timer'
                 w.create_text(x_centre, y_centre, fill="red", font=timerFontLarge, text="0:00", tag="endBreakTimer")
                     
-            else:   
+            #elif int(self.hours_left) != -1 and int(self.minutes_left) != 59 and int(self.seconds_left) != 59:
+            else:
+                print(self.hours_left)
+                print(self.minutes_left)
+                print(self.seconds_left)
                 if self.seconds_left < 10:
                     self.seconds_left = "0" + str(self.seconds_left)
-
+                if int(self.hours_left) > 0 and int(self.minutes_left) < 10:
+                    print("In here")
+                    self.minutes_left = "0" + str(self.minutes_left)
                 if self.hours_left > 0:
                     w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontSmall, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
                 elif self.hours_left == 0:
                     w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="breakTimer")
                 
+                print(self.hours_left)
+                print(self.minutes_left)
+                print(self.seconds_left)
                 w.after(1000,self.break_timer)
+                    
+            
 
     def stop_break_timer(self):
         global continue_break_timer
@@ -383,6 +386,9 @@ class lightsGui(threading.Thread):
     def bar_loaded_manager(self):      
         global decisionOnScreen
         decisionOnScreen = False
+        global judgeOne
+        global judgeTwo
+        global judgeThree
         judgeOne = False
         judgeTwo = False
         judgeThree = False
@@ -403,7 +409,7 @@ class lightsGui(threading.Thread):
         print("CONTINUE BAR LOADED IS "+str(continue_bar_loaded))
         if continue_bar_loaded:
             self.scoresIn = False
-           
+            #watchForDecisions = False
             w.delete("lights", "countdown_time")
             if self.time == 60:
                 w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text="1:00", tag="countdown_time")
@@ -424,11 +430,17 @@ class lightsGui(threading.Thread):
                 w.delete("countdown_time")
         else:
             print("BAR LOADED STOPPED")
+            
+            #watchForDecisions = True
+            #watchRemotesAllTime().start()
+            #watchRemotes()
+        #watchRemotesAllTime().start()  
         
     def stop_bar_loaded(self):
         global continue_bar_loaded
         continue_bar_loaded = False
         w.delete("countdown_time")
+        #w.delete("greenLight")
         return
 
     def judgeOneChosenWhite(self):
@@ -627,12 +639,14 @@ class lightsGui(threading.Thread):
             judgeTwo = False
             judgeThree = False
             self.allResultsIn = True
+            #watchForDecisions = False
             self.time == 60
             self.initScoresIn()
                 
         else:
             root.update()
             print("Results are missing")
+            #watchRemotesAllTime().start()
                 
     def initScoresIn(self):
         
@@ -775,158 +789,11 @@ class lightsGui(threading.Thread):
         global decisionOnScreen
         decisionOnScreen = False
         return
-    
-    def manage_dynamic_countdown_timer():
-        
-        global run_submission_timers
-        global inSetCountdownTimer
-        global dynamic_countdown_timer_active
-        
-        run_submission_timers = False
-        
-        if dynamic_countdown_timer_active:
-            dynamic_countdown_timer_active = False
-            global inSetCountdownTimer = False
-       
-        elif not dynamic_countdown_timer_active:
-            dynamic_countdown_timer_active = True
-            inSetCountdownTimer = True
-            w.delete(ALL)
-            self.init_set_countdown_timer()
-    
-    def init_set_countdown_timer():
-        global inSetCountdownTimer
-        global defaultTimerStart
-        global timeOnScreen
 
-        if inSetCountdownTimer:
-            if not timeOnScreen:
-                w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text=str(defaultTimerStart)+":00", tag="dynamic_countdown_time")
-                timeOnScreen = True:
-            elif timeOnScreen:
-                w.delete(ALL)
-                timeOnScreen = False:
-            w.after(500,self.init_set_countdown_timer)
-        
-        elif not inSetCountdownTimer:
-            print("Time set")
-            
-    def add_to_countdown_timer():
-        global defaultTimerStart
-        defaultTimerStart += 1
-        #w.delete(ALL)
-        #w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text=str(defaultTimerStart)+":00", tag="dynamic_countdown_time")
-        #root.update()
-        
-    def subtract_from_countdown_timer():
-        global defaultTimerStart
-        defaultTimerStart -= 1
-        #w.delete(ALL)
-        #w.create_text(x_centre, y_centre, fill="white", font=timerFontLarge, text=str(defaultTimerStart)+":00", tag="dynamic_countdown_time")
-        #root.update()
-        
-    def start_dynamic_countdown_timer_manager():
-        
-        global inSetCountdownTimer
-        inSetCountdownTimer = False
-        global continue_dynamic_countdown_timer
-
-        if continue_dynamic_countdown_timer:
-            continue_dynamic_countdown_timer = False
-            #global watchForDecisions
-            #watchForDecisions = True
-            self.stop_dynamic_countdown_timer()
-        
-        elif not continue_dynamic_countdown_timer:
-            continue_dynamic_countdown_timer = True
-            #global watchForDecisions
-            #watchForDecisions = False
-            self.init_dynamic_countdown_timer()        
-
-    def init_dynamic_countdown_timer(self):
-
-        w.delete(ALL)
-        self.hours_for_timer = int(self.parse_countdown_time()[0])
-        self.minutes_for_timer = int(defaultTimerStart)
-        self.seconds_for_timer = int(60)
-
-        if self.seconds_for_timer == 60:
-            self.minutes_for_timer -= 1
-
-        if self.minutes_for_timer == 60:
-            self.hours_for_timer -= 1
-
-        w.delete(ALL)
-        self.final_time = datetime.datetime.now() + timedelta(hours=self.hours_for_timer,minutes=self.minutes_for_timer,seconds=self.seconds_for_timer)
-        self.dynamic_break_timer()
-
-    def dynamic_break_timer(self):
-        
-        if continue_dynamic_countdown_timer:
-            
-            self.text_colour = 'white'
-            w.delete("dynamic_countdown_time")
-
-            self.time_remaining = self.final_time - datetime.datetime.now()
-            self.seconds_remaining =(math.ceil(self.time_remaining.total_seconds()))
-
-            self.hours_left = int(self.seconds_remaining//3600)
-            self.minutes_left = int((self.seconds_remaining - self.hours_left*3600)//60)
-            self.seconds_left = int((self.seconds_remaining - self.hours_left*3600 - self.minutes_left*60))
-
-            if self.minutes_left < 10:
-                self.text_colour = "orange"
-                if self.minutes_left < 3:
-                    self.text_colour = "red"
-
-                self.minutes_left = str(self.minutes_left)
-
-            if int(self.hours_left) == -1 and int(self.minutes_left) == 59 and int(self.seconds_left) == 59:
-                print("Timer finished. Watching for remote inputs...")
-                global watchForDecisions
-                watchForDecisions = True
-                global run_submission_timers
-                run_submission_timers = True
-                global continue_dynamic_countdown_timer
-                continue_dynamic_countdown_timer = False
-                global run_submission_timers
-                run_submission_timers = True
-                global submissionTimerOneRunning
-                submissionTimerOneRunning = False
-                global submissionTimerTwoRunning
-                submissionTimerTwoRunning = False
-                global submissionTimerThreeRunning
-                submissionTimerThreeRunning = False
-                w.create_text(x_centre, y_centre, fill="red", font=timerFontLarge, text="0:00", tag="endBreakTimer")
-                    
-            else:   
-                if self.seconds_left < 10:
-                    self.seconds_left = "0" + str(self.seconds_left)
-
-                if self.hours_left > 0:
-                    w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontSmall, text=(str(self.hours_left) + ":" + str(self.minutes_left) + ":" + str(self.seconds_left)), tag="dynamic_countdown_time")
-                elif self.hours_left == 0:
-                    w.create_text(x_centre, y_centre, fill=self.text_colour, font=timerFontLarge, text=(str(self.minutes_left) + ":" + str(self.seconds_left)), tag="dynamic_countdown_time")
-                
-                w.after(1000,self.break_timer)
-
-    def stop_dynamic_countdown_timer(self):
-        global continue_dynamic_countdown_timer
-        continue_dynamic_countdown_timer = False
-        global run_submission_timers
-        run_submission_timers = True
-        global submissionTimerOneRunning
-        submissionTimerOneRunning = False
-        global submissionTimerTwoRunning
-        submissionTimerTwoRunning = False
-        global submissionTimerThreeRunning
-        submissionTimerThreeRunning = False
-        w.delete(ALL)
-        w.delete("dynamic_countdown_time")
-        
 class watchRemotesAllTime(threading.Thread):
     def __init__(self):
-        print("Starting watchRemotesAllTime")  
+        print("Starting watchRemotesAllTime")
+            
         threading.Thread.__init__(self)
         
     def run(self):
@@ -940,37 +807,33 @@ class watchRemotesAllTime(threading.Thread):
             for fd in r:
                 for event in deviceList[fd].read():
                     if event.type == ecodes.EV_KEY:
-                        if event.code == 45 and event.value == 1 and watchForDecisions == True and inSetCountdownTimer == False:
+                        if event.code == 45 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenWhite()
+                                #return
                             elif fd == rc2:
                                 lightsGuiJO.judgeTwoChosenWhite()
+                                #return
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenWhite()
-                        elif event.code == 44 and event.value == 1 and watchForDecisions == True and inSetCountdownTimer == False:
+                                #return
+                        elif event.code == 44 and event.value == 1 and watchForDecisions == True:
                             if fd == rc1:
                                 lightsGuiJO.judgeOneChosenRed(color1="red")
+                                #return
                             elif fd == rc2:
                                 lightsGuiJO.judgeTwoChosenRed(color2="red")
+                                #return
                             elif fd == rc3:
                                 lightsGuiJO.judgeThreeChosenRed(color3="red")
-                        elif event.code == 31 and event.value == 1 and watchForDecisions == True and inSetCountdownTimer == False:
+                                #return
+                        elif event.code == 31 and event.value == 1 and watchForDecisions == True:
+                            print(event.code)
+                            print(event.value)
+                            print(fd)
                             if fd == rc2:
                                 lightsGuiJO.bar_loaded_manager()
-                        #DYNAMIC COUNTDOWN FUNCTIONS
-                        elif event.code == 31 and event.value == 2 and watchForDecisions == True:
-                            if fd == rc2:
-                                lightsGuiJO.manage_dynamic_countdown_timer()
-                        elif event.code == 45 and event.value == 1 and watchForDecisions == False and inSetCountdownTimer == True:
-                            if fd == rc2:
-                                lightsGuiJO.add_to_countdown_timer()
-                        elif event.code == 44 and event.value == 1 and watchForDecisions == False and inSetCountdownTimer == True:
-                            if fd == rc2:
-                                lightsGuiJO.subtract_from_countdown_timer()
-                        elif event.code == 31 and event.value == 1 and watchForDecisions == True and inSetCountdownTimer == True:
-                            if fd == rc2:
-                                inSetCountdownTimer = False
-                                lightsGuiJO.start_dynamic_countdown_timer_manager()
+                                #return
 def main(): 
     app = lightsGui(root)
     root.mainloop()
@@ -978,5 +841,3 @@ def main():
 if __name__ == '__main__':
     root = tk.Tk()
     main()
-
-
