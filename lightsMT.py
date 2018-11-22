@@ -161,7 +161,7 @@ class lightsGui(threading.Thread):
         for device in self.deviceList:
             self.deviceName = (str(device.name))
             print(self.deviceName)
-            if self.deviceName == 'Adafruit Bluefruit LE' or self.deviceName == 'Adafruit Bluefruit LE D9C3' or self.deviceName == 'Adafruit Bluefruit LE 7B65':
+            if self.deviceName == 'Adafruit Bluefruit LE 8D4E' or self.deviceName == 'Adafruit Bluefruit LE D9C3' or self.deviceName == 'Adafruit Bluefruit LE 7B65':
                 self.devicePaths.append(device.path)
         
         print(self.devicePaths)
@@ -345,8 +345,9 @@ class lightsGui(threading.Thread):
                 global submissionTimerThreeRunning
                 submissionTimerThreeRunning = False
                 self.session_break_timer['text'] = 'Start break timer'
+                self.stop_break_timer()
                 w.create_text(x_centre, y_centre, fill="red", font=timerFontLarge, text="0:00", tag="endBreakTimer")
-                    
+                
             #elif int(self.hours_left) != -1 and int(self.minutes_left) != 59 and int(self.seconds_left) != 59:
             else:
                 print(self.hours_left)
@@ -382,6 +383,7 @@ class lightsGui(threading.Thread):
         submissionTimerThreeRunning = False
         w.delete(ALL)
         w.delete("breakTimer")
+        return
 
     def bar_loaded_manager(self):      
         global decisionOnScreen
@@ -841,3 +843,5 @@ def main():
 if __name__ == '__main__':
     root = tk.Tk()
     main()
+
+
